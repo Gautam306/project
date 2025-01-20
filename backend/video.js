@@ -62,7 +62,7 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("user:left", { id: socket.id });
   });
 
-  socket.on("disconnect", () => {
+  socket.on("disconnect-player", () => {
     console.log(`Socket Disconnected`, socket.id);
 
     // Remove from maps

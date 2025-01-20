@@ -70,6 +70,12 @@ io.on("connection", (socket) => {
         }
     });
 
+    // handle player meet-up
+    socket.on("player-meet",(mapId)=>{
+        console.log("player-meet ",mapId,"  ",socket.id);
+        socket.to(mapId).emit("player-meet");
+    })
+
     // Handle player disconnection
     socket.on("disconnect", () => {
         console.log(`Player disconnected: ${socket.id}`);

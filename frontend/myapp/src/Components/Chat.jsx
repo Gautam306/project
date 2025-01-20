@@ -8,7 +8,7 @@ const Chat = ({ roomId }) => {
   const [newMessage, setNewMessage] = useState("");
   const {socket} = useSocket();
   const messagesEndRef = useRef(null);
-
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -19,12 +19,12 @@ const Chat = ({ roomId }) => {
 
   useEffect(() => {
     console.log("chat:message")
-    socket.current.on("chat:message", ({ sender, message, timestamp }) => {
+    socket.current?.on("chat:message", ({ sender, message, timestamp }) => {
       setMessages((prev) => [...prev, { sender, message, timestamp, type: "received" }]);
     });
 
     return () => {
-      socket.current.off("chat:message");
+      socket.current?.off("chat:message");
     };
   }, [socket.current]);
 
@@ -34,10 +34,10 @@ const Chat = ({ roomId }) => {
       const messageData = {
         message: newMessage,
         timestamp: new Date().toISOString(),
-        room: roomId,
+        room: userInfo.mapId,
       };
 
-      socket.current.emit("chat:send", messageData);
+      socket.current?.emit("chat:send", messageData);
       setMessages((prev) => [
         ...prev,
         {
@@ -73,7 +73,8 @@ const Chat = ({ roomId }) => {
           className="chat-header"
           style={{
             backgroundColor: "#333",
-            padding: "10px",
+            paddingTop: "10px",
+            paddingBottom:"5px",
             textAlign: "center",
             fontWeight: "bold",
           }}

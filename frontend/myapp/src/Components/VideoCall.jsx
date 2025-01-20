@@ -13,9 +13,10 @@ const RoomPage = () => {
   // const [myStream, setMyStream] = useState(null);
   // const [remoteStream, setRemoteStream] = useState();
   const [sendStreamsStatus, setSendStreamsStatus] = useState(false);
+  console.log("Video Call components ",socket.current?.id);
 
   const handleUserJoined = useCallback(async ({ email, id }) => {
-    console.log(`Email ${email} joined room`);
+    console.log(`Email ${email} joined room`,id);
     setRemoteSocketId(id);
     handleCallUser(id);
   }, [myStream]);
@@ -26,7 +27,7 @@ const RoomPage = () => {
     // Loop through the keys of the Map
     for (let i = data.length - 2; i < data.length; i++) {
       console.log("handleALlUser data ", data[i]);
-      if (data[i] != socket.current.id) {
+      if (data[i] != socket.current?.id) {
         setRemoteSocketId(data[i]);
         console.log("find RemoteSocketId ", data[i]);
         handleCallUser(data[i]);
@@ -60,8 +61,8 @@ const RoomPage = () => {
     console.log("handleCalluser");
     // sendStreams(stream);
     const offer = await peer.getOffer();
-    socket.current.emit("user:call", { to: id, offer });
-  }, [remoteSocketId, socket]);
+    socket.current?.emit("user:call", { to: id, offer });
+  }, [remoteSocketId, socket.current]);
 
   const handleIncommingCall = useCallback(
     async ({ from, offer }) => {
@@ -77,11 +78,11 @@ const RoomPage = () => {
       // sendStreams(stream);
       console.log(`Incoming Call`, from, offer);
       const ans = await peer.getAnswer(offer);
-      socket.current.emit("call:accepted", { to: from, ans });
+      socket.current?.emit("call:accepted", { to: from, ans });
       // if(myStream!==null)
       //   setMyStream(stream);
     },
-    [socket, myStream]
+    [socket.current, myStream]
   );
 
   const sendStreams = useCallback(async () => {
@@ -137,7 +138,7 @@ const RoomPage = () => {
   const handleNegoNeeded = useCallback(async () => {
     const offer = await peer.getOffer();
     console.log("handleNegoNeeded");
-    socket.current.emit("peer:nego:needed", { offer, to: remoteSocketId });
+    socket.current?.emit("peer:nego:needed", { offer, to: remoteSocketId });
   }, [remoteSocketId, socket]);
 
   useEffect(() => {
@@ -151,7 +152,7 @@ const RoomPage = () => {
     async ({ from, offer }) => {
       console.log("handleNegoNeedIncomming");
       const ans = await peer.getAnswer(offer);
-      socket.current.emit("peer:nego:done", { to: from, ans });
+      socket.current?.emit("peer:nego:done", { to: from, ans });
       sendStreams();
     },
     [socket]
@@ -182,31 +183,31 @@ const RoomPage = () => {
       setRemoteSocketId(null);
       setRemoteStream(null);
     }
-
+    
   }, [remoteSocketId, remoteStream, socket])
 
 
   useEffect(() => {
-    console.log("heelo useeffect", socket.current.id);
-    socket.current.on("all:user", handleAllUser);
-    // socket.current.on("room:join",handleAllUser);
-    socket.current.on("user:joined", handleUserJoined);
-    // socket.current.on("user:joined", handleAllUser);
-    socket.current.on("incomming:call", handleIncommingCall);
-    socket.current.on("call:accepted", handleCallAccepted);
-    socket.current.on("peer:nego:needed", handleNegoNeedIncomming);
-    socket.current.on("peer:nego:final", handleNegoNeedFinal);
-    socket.current.on("user:left", handleCallDisconnect);
+    console.log("heelo useeffect", socket.current?.id);
+    socket.current?.on("all:user", handleAllUser);
+    // socket.current?.on("room:join",handleAllUser);
+    socket.current?.on("user:joined", handleUserJoined);
+    // socket.current?.on("user:joined", handleAllUser);
+    socket.current?.on("incomming:call", handleIncommingCall);
+    socket.current?.on("call:accepted", handleCallAccepted);
+    socket.current?.on("peer:nego:needed", handleNegoNeedIncomming);
+    socket.current?.on("peer:nego:final", handleNegoNeedFinal);
+    socket.current?.on("user:left", handleCallDisconnect);
 
     return () => {
-      socket.current.off("all:user", handleAllUser);
-      socket.current.off("user:joined", handleUserJoined);
-      // socket.current.off("user:joined", handleAllUser);
-      socket.current.off("incomming:call", handleIncommingCall);
-      socket.current.off("call:accepted", handleCallAccepted);
-      socket.current.off("peer:nego:needed", handleNegoNeedIncomming);
-      socket.current.off("peer:nego:final", handleNegoNeedFinal);
-      socket.current.off("user:left", handleCallDisconnect);
+      socket.current?.off("all:user", handleAllUser);
+      socket.current?.off("user:joined", handleUserJoined);
+      // socket.current?.off("user:joined", handleAllUser);
+      socket.current?.off("incomming:call", handleIncommingCall);
+      socket.current?.off("call:accepted", handleCallAccepted);
+      socket.current?.off("peer:nego:needed", handleNegoNeedIncomming);
+      socket.current?.off("peer:nego:final", handleNegoNeedFinal);
+      socket.current?.off("user:left", handleCallDisconnect);
     };
   }, [
     socket,
@@ -253,7 +254,7 @@ const RoomPage = () => {
     //     <div className="stream-box my-stream">
     //       <h3>You</h3>
     //       {myStream ? (
-    //         <ReactPlayer playing muted height="100%" width="100%" url={myStream} />
+    //         <Reactf playing muted height="100%" width="100%" url={myStream} />
     //       ) : (
     //         <p>No stream available</p>
     //       )}

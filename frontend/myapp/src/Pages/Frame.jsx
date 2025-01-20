@@ -8,7 +8,7 @@ import Chat from "../Components/Chat";
 export const VideoFrame = () => {
     const [isMicOn, setIsMicOn] = useState(true);
     const [isCamOn, setIsCamOn] = useState(true);
-    const { remoteStream,myStream,setMyStream } = useSocket();
+    const { socket,remoteStream,myStream,setMyStream } = useSocket();
     // const [myStream,setMyStream]=useState(null);
     // const EnterRoom = async () => {
 
@@ -59,7 +59,7 @@ export const VideoFrame = () => {
             <div className="video-frame">
                 <Map />
             </div>
-            <VideoCall />
+            {/* <VideoCall/> */}
             <Chat roomId={"1"}/>
              <DraggableDiv Stream={myStream} isCamOn={isCamOn} />
             {remoteStream!=null && <DraggableDiv Stream={remoteStream} />}

@@ -4,11 +4,11 @@ import Entry from './Pages/Entry';
 import Map from './Pages/Map';
 import VideoFrame from './Pages/Frame';
 import VideoCall from './Components/VideoCall';
-import { SocketProvider } from './ContextApi/SocketProvider';
+
 
 function App() {
   return (
-    <SocketProvider>
+    
       <Router>
         <Routes>
           <Route path="/" element={<Entry />} />
@@ -16,7 +16,7 @@ function App() {
           <Route path="/connected" element={<VideoCall />} />
         </Routes>
       </Router>
-    </SocketProvider>
+    
   );
 }
 

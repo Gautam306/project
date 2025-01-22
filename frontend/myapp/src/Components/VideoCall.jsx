@@ -7,16 +7,17 @@ import { useSocket } from "../ContextApi/SocketProvider";
 // import Chat from '../screens/Chat';
 
 const RoomPage = () => {
-  const {socket,remoteStream,setRemoteStream,myStream, setMyStream} = useSocket();
+  const { socket, remoteStream, setRemoteStream, myStream, setMyStream, remoteSocketId, setRemoteSocketId, handleCallDisconnect } = useSocket();
 
-  const [remoteSocketId, setRemoteSocketId] = useState(null);
+  // const [remoteSocketId, setRemoteSocketId] = useState(null);
   // const [myStream, setMyStream] = useState(null);
   // const [remoteStream, setRemoteStream] = useState();
-  const [sendStreamsStatus, setSendStreamsStatus] = useState(false);
-  console.log("Video Call components ",socket.current?.id);
+  // const [sendStreamsStatus, setSendStreamsStatus] = useState(false);
+  console.log("Video Call components ", socket.current?.id);
+  
 
   const handleUserJoined = useCallback(async ({ email, id }) => {
-    console.log(`Email ${email} joined room`,id);
+    console.log(`Email ${email} joined room`, id);
     setRemoteSocketId(id);
     handleCallUser(id);
   }, [myStream]);
@@ -27,10 +28,10 @@ const RoomPage = () => {
     // Loop through the keys of the Map
     for (let i = data.length - 2; i < data.length; i++) {
       console.log("handleALlUser data ", data[i]);
-      if (data[i] != socket.current?.id) {
+      if (data[i]!==undefined && data[i] != socket.current?.id) {
         setRemoteSocketId(data[i]);
         console.log("find RemoteSocketId ", data[i]);
-        handleCallUser(data[i]);
+        (data[i]);
       }
       // console.log(data[i]);
     }
@@ -51,6 +52,7 @@ const RoomPage = () => {
   }
   useEffect(() => {
     console.log("myStream useEffect ", myStream);
+    if (myStream === null)
     EnterRoom();
   }, [myStream])
 
@@ -95,11 +97,11 @@ const RoomPage = () => {
     // Get existing senders
     const existingSenders = peer.peer.getSenders();
     existingSenders.forEach((sender) => {
-      console.log("sender track",sender,"   ",myStream)
-      if (sender.track!=myStream) {
-        // sender.track.stop(); // Stop the track if necessary
+      console.log("sender track", sender, "   ", myStream)
+      if (sender.track != myStream) {
+        // sender.track?.stop(); // Stop the track if necessary
         // peer.peer.removeTrack(sender); // Remove the sender
-        // console.log(`Removed track: ${sender.track.kind}`);
+        console.log(`Removed track: ${sender.track}`,"  ",myStream);
       }
     });
     for (const track of myStream.getTracks()) {
@@ -109,7 +111,7 @@ const RoomPage = () => {
       // const existingSenders = peer.peer.getSenders();
 
       // Remove all existing tracks before re-adding
-      
+
 
       if (!trackAlreadyAdded) {
         peer.peer.addTrack(track, myStream);
@@ -172,19 +174,19 @@ const RoomPage = () => {
     });
   }, []);
 
-  const handleCallDisconnect = useCallback(async ({ id }) => {
-    console.log(`User with socket ID ${id} left the chat.`);
-    if (id === remoteSocketId) {
-      // Stop all tracks of the remote stream
-      if (remoteStream) {
-        remoteStream.getTracks().forEach((track) => track.stop());
-      }
-      // Clear remote socket ID and stream
-      setRemoteSocketId(null);
-      setRemoteStream(null);
-    }
-    
-  }, [remoteSocketId, remoteStream, socket])
+  // const handleCallDisconnect = useCallback(async ({ id }) => {
+  //   console.log(`User with socket ID ${id} left the chat.`);
+  //   if (id === remoteSocketId) {
+  //     // Stop all tracks of the remote stream
+  //     if (remoteStream) {
+  //       remoteStream.getTracks().forEach((track) => track.stop());
+  //     }
+  //     // Clear remote socket ID and stream
+  //     setRemoteSocketId(null);
+  //     setRemoteStream(null);
+  //   }
+
+  // }, [remoteSocketId, remoteStream, socket])
 
 
   useEffect(() => {
@@ -278,7 +280,7 @@ const RoomPage = () => {
     //   </div>
     //   {/* <Chat roomId={window.location.pathname.split('/').pop()} /> */}
     // </div>
-    
+
   );
 };
 

@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import ReactPlayer from "react-player";
 import {CameraOff} from "react-feather";
 
-const DraggableDiv = ({Stream,isCamOn}) => {
+const DraggableDiv = ({Stream,isCamOn,user}) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  // console.log(Stream);
+  console.log(Stream);
   const handleMouseDown = (e) => {
     setDragging(true);
     setOffset({
@@ -40,7 +40,8 @@ const DraggableDiv = ({Stream,isCamOn}) => {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp} // Stop dragging if the mouse leaves the div
     >
-      {Stream ?<ReactPlayer playing muted height="90%" width='90%'  url={Stream} />:<CameraOff/>}
+      {user}
+      {Stream && Stream.getVideoTracks()[0].enabled?<ReactPlayer playing muted height="90%" width='90%'  url={Stream} />:<CameraOff/>}
     </div>
   );
 };

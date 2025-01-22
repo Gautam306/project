@@ -61,8 +61,8 @@ export const VideoFrame = () => {
             </div>
             {/* <VideoCall/> */}
             <Chat roomId={"1"}/>
-             <DraggableDiv Stream={myStream} isCamOn={isCamOn} />
-            {remoteStream!=null && <DraggableDiv Stream={remoteStream} />}
+             <DraggableDiv Stream={myStream} isCamOn={isCamOn} user="self" />
+            {remoteStream!=null && <DraggableDiv Stream={remoteStream} user="other"/>}
 
 
             <div className="footer">

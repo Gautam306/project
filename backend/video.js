@@ -7,13 +7,13 @@ const io = new Server(8000, {
 const emailToSocketIdMap = new Map();
 const socketidToEmailMap = new Map();
 
-const socketID=[];
+const socketID = [];
 function disconnectAllUsers() {
   for (const [socketId, socket] of io.sockets.sockets) {
     console.log(`Disconnecting socket: ${socketId}`);
-    if(socketID===socket.id)
-    {
-      socket.disconnect(true); }// Pass `true` to forcefully disconnect
+    if (socketID === socket.id) {
+      socket.disconnect(true);
+    }// Pass `true` to forcefully disconnect
   }
   console.log("All users have been disconnected.");
 }
@@ -25,24 +25,32 @@ io.on("connection", (socket) => {
     const { email, room } = data;
     emailToSocketIdMap.set(email, socket.id);
     socketID.push(socket.id);
-    console.log("user join with email room",room);
+    console.log("user join with email room", room);
     socketidToEmailMap.set(socket.id, email);
-    io.to(room).emit("user:joined", { email, id: socket.id });
+    // if (socketID.length > 1) {
+      io.to(room).emit("user:joined", { email, id: socket.id });
+    // }
     console.log("user:joined ", email, "  ", socket.id)
     socket.join(room);
     io.to(socket.id).emit("room:join", data);
-    setTimeout(() => {
-      const plainObject = Object.fromEntries(socketidToEmailMap);
-      io.to(socket.id).emit("all:user", { data: socketID });
-      console.log("all:user emitted", socketidToEmailMap, "to:", socket.id);
-    }, 100); // 100ms delay
+    // if (socketID.length > 1) {
+      setTimeout(() => {
+        const plainObject = Object.fromEntries(socketidToEmailMap);
+
+        io.to(socket.id).emit("all:user", { data: socketID });
+
+        console.log("all:user emitted", socketidToEmailMap, "to:", socket.id);
+      }, 100); // 100ms delay
+    // }
   });
 
   socket.on("user:call", ({ to, offer }) => {
+    console.log("user:call ", to);
     io.to(to).emit("incomming:call", { from: socket.id, offer });
   });
 
   socket.on("call:accepted", ({ to, ans }) => {
+    console.log("call:accepted ", to);
     io.to(to).emit("call:accepted", { from: socket.id, ans });
   });
 
@@ -55,14 +63,20 @@ io.on("connection", (socket) => {
     console.log("peer:nego:done");
     io.to(to).emit("peer:nego:final", { from: socket.id, ans });
   });
-  socket.on("disconnect:user", () => {
-    socketID.filter((id)=>id!==socket.id);
-    console.log(`User ${socket.id} disconnected`);
-    disconnectAllUsers();
-    socket.broadcast.emit("user:left", { id: socket.id });
+  socket.on("disconnect-player", () => {
+    console.log("disconnect-player");
+    socketID.filter((id) => id !== socket.id);
+
+    const email = socketidToEmailMap.get(socket.id);
+    // socket.broadcast.emit("user:left", { email, ids: socketID });
+    io.to(socket.id).emit("all-user-before-disconnect", { data: socketID });
+    console.log(`User ${socket.id} disconnected`, email);
+    // disconnectAllUsers();
+    // socket.broadcast.emit("user:left", { id: socket.id ,userSocket:socket});
+
   });
 
-  socket.on("disconnect-player", () => {
+  socket.on("disconnect", () => {
     console.log(`Socket Disconnected`, socket.id);
 
     // Remove from maps
@@ -74,7 +88,7 @@ io.on("connection", (socket) => {
 
     socketidToEmailMap.delete(socket.id);
     console.log(`Removed ${socket.id} from socketidToEmailMap`);
-
+    socket.broadcast.emit("user:left", { email, id: socket.id });
     // Remove from the socketID array
     const index = socketID.indexOf(socket.id);
     if (index > -1) {
@@ -82,9 +96,8 @@ io.on("connection", (socket) => {
       console.log(`Removed ${socket.id} from socketID array`);
     }
 
-    // Notify others that the user has disconnected
-    io.emit("user:left", { email, id: socket.id });
     console.log(`user:left event emitted for ${email} (${socket.id})`);
+    disconnectAllUsers();
   });
 
 
@@ -92,7 +105,7 @@ io.on("connection", (socket) => {
   socket.on("screen:share:started", ({ to }) => {
     io.to(to).emit("screen:share:started", { from: socket.id });
   });
-  
+
   socket.on("screen:share:stopped", ({ to }) => {
     io.to(to).emit("screen:share:stopped", { from: socket.id });
   });
@@ -101,9 +114,9 @@ io.on("connection", (socket) => {
   socket.on("chat:send", (data) => {
     const { message, timestamp, room } = data;
     const senderEmail = socketidToEmailMap.get(socket.id);
-    console.log("data chat ",data,senderEmail,room);
+    console.log("data chat ", data, senderEmail, room);
     // Broadcast the message to all users in the room except the sender
-    
+
     socket.to(room).emit("chat:message", {
       sender: senderEmail,
       message,

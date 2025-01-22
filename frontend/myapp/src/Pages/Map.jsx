@@ -11,10 +11,19 @@ import VideoCall from "../Components/VideoCall";
 export const Map = () => {
     const gameRef = useRef(null);
     const gamesocket = useRef(null);
-    const { socket } = useSocket();
+    const { socket, setMyStream, myStream, setRemoteStream, remoteStream, handleCallDisconnect } = useSocket();
     const [call, setCall] = useState(false);
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     console.log("videoSocket id", socket.current?.id);
+    console.log("Players out of proximity, distance:1223", remoteStream);
+    const handleDisconnectionStream =async ({data} ) => {
+        console.log("handleDisconnectionStream ", data);
+        for (let i = 0; i < data.length; i++) {
+            // if (data[i] != socket.current?.id) {
+                handleCallDisconnect(data[i]);
+            // }
+        }
+    }
     useEffect(() => {
 
 
@@ -40,7 +49,7 @@ export const Map = () => {
                 // videogamesocket.disconnect();
             }
             if (socket.current) {
-                // socket.current.disconnect();
+                socket.current.disconnect();
             }
         };
 
@@ -159,8 +168,8 @@ export const Map = () => {
                     }
                 });
 
-                gamesocket.current.on('player-meet',()=>{
-                    this.handleProximity(this.player,this.otherPlayers);
+                gamesocket.current.on('player-meet', () => {
+                    this.handleProximity(this.player, this.otherPlayers);
                 })
 
                 gamesocket.current.on("playerMoved", (player) => {
@@ -289,48 +298,48 @@ export const Map = () => {
                 // console.log("Room created: ",this.otherPlayers,"    ",Object.entries(this.otherPlayers) );
                 // Check for proximity and room destruction
                 Object.entries(this.otherPlayers).forEach(([id, otherPlayer]) => {
-                //     const distance = Phaser.Math.Distance.Between(
-                //         this.player.x,
-                //         this.player.y,
-                //         otherPlayer.x,
-                //         otherPlayer.y
-                //     );
+                    //     const distance = Phaser.Math.Distance.Between(
+                    //         this.player.x,
+                    //         this.player.y,
+                    //         otherPlayer.x,
+                    //         otherPlayer.y
+                    //     );
 
                     this.handleProximity(this.player, otherPlayer);
 
 
-                //     if (distance > 50 && this.activeRooms[id]) {
-                //         console.log("distance > 50");
-                //         // If player is out of proximity and room exists, destroy the room
-                //         // gamesocket.current.emit("destroyRoom", { roomId: this.activeRooms[id] });
-                //         console.log(`Room destroyed: ${this.activeRooms[id]}`);
-                //         delete this.activeRooms[id];
-                //         if (socket.current) {
-                //             // socket.current.disconnect();
-                //         }
-                //     }
+                    //     if (distance > 50 && this.activeRooms[id]) {
+                    //         console.log("distance > 50");
+                    //         // If player is out of proximity and room exists, destroy the room
+                    //         // gamesocket.current.emit("destroyRoom", { roomId: this.activeRooms[id] });
+                    //         console.log(`Room destroyed: ${this.activeRooms[id]}`);
+                    //         delete this.activeRooms[id];
+                    //         if (socket.current) {
+                    //             // socket.current.disconnect();
+                    //         }
+                    //     }
                 });
 
             }
             handleProximity(player, otherPlayer) {
-                
+
                 const distance = Phaser.Math.Distance.Between(
                     player.x,
                     player.y,
                     otherPlayer.x,
                     otherPlayer.y
                 );
-            
+
                 const otherPlayerId = Object.keys(this.otherPlayers).find(
                     (id) => this.otherPlayers[id] === otherPlayer
                 );
-            
+
                 if (!otherPlayerId) return; // Ensure the other player exists
-            
+
                 // If players are within range (e.g., distance <= 2), join the call
-                if (distance <= 20) {
+                if (distance <= 100) {
                     // console.log("Players in proximity, distance:", distance);
-            
+
                     if (!this.activeRooms[otherPlayerId]) {
                         // Initialize socket connection and join the room if not already joined
                         if (!socket.current) {
@@ -338,40 +347,59 @@ export const Map = () => {
                                 path: "/socket.io",
                                 transports: ["websocket"],
                             });
-                            gamesocket.current.emit('player-meet',{mapId:userInfo.mapId});
+                            socket.current.emit("room:join", { email: userInfo.username, room: userInfo.mapId });
+                            // gamesocket.current.emit('player-meet', { mapId: userInfo.mapId });
                         }
-            
+                        console.log("socket is created for user", userInfo.username, "    ", socket.current)
+
                         // Emit room join event
-                        socket.current.emit("room:join", { email: userInfo.username, room: userInfo.mapId });
+                       
                         // console.log(`Joining room for proximity with ${otherPlayerId}`);
-            
+
                         // Mark room as active
                         this.activeRooms[otherPlayerId] = true;
                     }
-            
+
                     setCall(true); // Indicate that the video call is active
                 } else {
                     // If players move out of range, disconnect the call
                     // console.log("Players out of proximity, distance:", distance);
-            
+
                     if (this.activeRooms[otherPlayerId]) {
                         // Disconnect socket if it's connected
                         if (socket.current) {
                             // socket.current.emit("room:leave", { email: userInfo.username, room: userInfo.mapId });
-                            // socket.current.disconnect();
+
+                            // setRemoteStream(null);
+
                             socket.current.emit("disconnect-player");
-                            gamesocket.current.emit('player-meet',{mapId:userInfo.mapId});
-                            // socket.current = null;
+
+                            // if (remoteStream) {
+                            //     remoteStream.getTracks().forEach((track) => track.stop());
+                            // }
+                            
+                            socket.current.on('all-user-before-disconnect', handleDisconnectionStream);
+                            
+                            setTimeout(() => {
+                                console.log("Players out of proximity, distance:1223", remoteStream);
+                                // setRemoteStream(null);
+                                socket.current.disconnect();
+                                // socket.current=null;
+                                // gamesocket.current.emit('player-meet',{mapId:userInfo.mapId});
+                                socket.current = null;
+                            }, 5000)
+
                         }
-            
+
+                        this.activeRooms[otherPlayerId] = false;
                         console.log(`Left room with ${otherPlayerId}`);
-                        delete this.activeRooms[otherPlayerId]; // Mark room as inactive
+                        // delete this.activeRooms[otherPlayerId]; // Mark room as inactive
                     }
-            
+
                     setCall(false); // Indicate that the video call is not active
                 }
             }
-            
+
             addOtherPlayer(player) {
                 const otherPlayer = this.add.sprite(player.x, player.y, "player");
                 otherPlayer.anims.play(player.anim || "walk-down", true);
@@ -429,12 +457,12 @@ export const Map = () => {
         };
     }, []);
 
-    return(
-    <>
-    <VideoCall key={socket}/>
-    <div id="phaser-game" style={{ width: "100vw", height: "85vh", }}></div>;
-    </>)
-    
+    return (
+        <>
+            <VideoCall />
+            <div id="phaser-game" style={{ width: "100vw", height: "85vh", }}></div>;
+        </>)
+
 };
 
 export default Map;

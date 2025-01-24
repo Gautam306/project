@@ -6,7 +6,7 @@ const DraggableDiv = ({Stream,isCamOn,user}) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  console.log(Stream);
+  // console.log(Stream);
   const handleMouseDown = (e) => {
     setDragging(true);
     setOffset({

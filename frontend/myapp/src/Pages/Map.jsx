@@ -16,11 +16,11 @@ export const Map = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     console.log("videoSocket id", socket.current?.id);
     console.log("Players out of proximity, distance:1223", remoteStream);
-    const handleDisconnectionStream =async ({data} ) => {
+    const handleDisconnectionStream = async ({ data }) => {
         console.log("handleDisconnectionStream ", data);
         for (let i = 0; i < data.length; i++) {
             // if (data[i] != socket.current?.id) {
-                handleCallDisconnect(data[i]);
+            handleCallDisconnect(data[i]);
             // }
         }
     }
@@ -49,7 +49,7 @@ export const Map = () => {
                 // videogamesocket.disconnect();
             }
             if (socket.current) {
-                socket.current.disconnect();
+                // socket.current.disconnect();
             }
         };
 
@@ -337,7 +337,7 @@ export const Map = () => {
                 if (!otherPlayerId) return; // Ensure the other player exists
 
                 // If players are within range (e.g., distance <= 2), join the call
-                if (distance <= 100) {
+                if (distance <= 200) {
                     // console.log("Players in proximity, distance:", distance);
 
                     if (!this.activeRooms[otherPlayerId]) {
@@ -347,17 +347,23 @@ export const Map = () => {
                                 path: "/socket.io",
                                 transports: ["websocket"],
                             });
-                            socket.current.emit("room:join", { email: userInfo.username, room: userInfo.mapId });
+                            gamesocket.current.on('video-call-start', (roomId) => {
+
+                                socket.current.emit("room:join", { email: userInfo.username, room: roomId });
+                                console.log("video-call-start", roomId);
+                                this.activeRooms[otherPlayerId] = true;
+                            })
+
                             // gamesocket.current.emit('player-meet', { mapId: userInfo.mapId });
                         }
                         console.log("socket is created for user", userInfo.username, "    ", socket.current)
 
                         // Emit room join event
-                       
+
                         // console.log(`Joining room for proximity with ${otherPlayerId}`);
 
                         // Mark room as active
-                        this.activeRooms[otherPlayerId] = true;
+
                     }
 
                     setCall(true); // Indicate that the video call is active
@@ -367,31 +373,37 @@ export const Map = () => {
 
                     if (this.activeRooms[otherPlayerId]) {
                         // Disconnect socket if it's connected
-                        if (socket.current) {
-                            // socket.current.emit("room:leave", { email: userInfo.username, room: userInfo.mapId });
 
-                            // setRemoteStream(null);
 
-                            socket.current.emit("disconnect-player");
+                        gamesocket.current.on('video-call-end', (roomId) => {
+                            if (socket.current) {
+                                // socket.current.emit("room:leave", { email: userInfo.username, room: userInfo.mapId });
 
-                            // if (remoteStream) {
-                            //     remoteStream.getTracks().forEach((track) => track.stop());
-                            // }
-                            
-                            socket.current.on('all-user-before-disconnect', handleDisconnectionStream);
-                            
-                            setTimeout(() => {
-                                console.log("Players out of proximity, distance:1223", remoteStream);
                                 // setRemoteStream(null);
-                                socket.current.disconnect();
-                                // socket.current=null;
-                                // gamesocket.current.emit('player-meet',{mapId:userInfo.mapId});
-                                socket.current = null;
-                            }, 5000)
 
-                        }
+                                socket.current.emit("disconnect-player");
 
-                        this.activeRooms[otherPlayerId] = false;
+                                // if (remoteStream) {
+                                //     remoteStream.getTracks().forEach((track) => track.stop());
+                                // }
+
+                                socket.current.on('all-user-before-disconnect', handleDisconnectionStream);
+
+                                setTimeout(() => {
+                                    console.log("Players out of proximity, distance:1223", remoteStream);
+                                    // setRemoteStream(null);
+                                    socket.current?.disconnect();
+                                    // socket.current=null;
+                                    // gamesocket.current.emit('player-meet',{mapId:userInfo.mapId});
+                                    socket.current = null;
+                                }, 5000)
+
+                            }
+                            this.activeRooms[otherPlayerId] = false;
+
+                        });
+
+
                         console.log(`Left room with ${otherPlayerId}`);
                         // delete this.activeRooms[otherPlayerId]; // Mark room as inactive
                     }

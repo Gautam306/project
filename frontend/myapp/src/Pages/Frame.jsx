@@ -59,7 +59,7 @@ export const VideoFrame = () => {
             <div className="video-frame">
                 <Map />
             </div>
-            <VideoCall/>
+            {/* <VideoCall/> */}
             <Chat roomId={"1"}/>
              <DraggableDiv Stream={myStream} isCamOn={isCamOn} user="self" />
             {remoteStream!=null && <DraggableDiv Stream={remoteStream} user="other"/>}

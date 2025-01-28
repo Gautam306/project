@@ -8,7 +8,7 @@ import Chat from "../Components/Chat";
 export const VideoFrame = () => {
     const [isMicOn, setIsMicOn] = useState(true);
     const [isCamOn, setIsCamOn] = useState(true);
-    const { socket,remoteStream,myStream,setMyStream } = useSocket();
+    const { socket, remoteStream, myStream, setMyStream } = useSocket();
     // const [myStream,setMyStream]=useState(null);
     // const EnterRoom = async () => {
 
@@ -17,7 +17,7 @@ export const VideoFrame = () => {
     //       video: true,
     //     });
     //     console.log("enterRoom", stream);
-    
+
     //     // localStorage.setItem("stream",stream);
     //     if (myStream === null)
     //       setMyStream(stream);
@@ -50,7 +50,7 @@ export const VideoFrame = () => {
         }
 
     };
-    
+
 
 
 
@@ -60,9 +60,9 @@ export const VideoFrame = () => {
                 <Map />
             </div>
             {/* <VideoCall/> */}
-            <Chat roomId={"1"}/>
-             <DraggableDiv Stream={myStream} isCamOn={isCamOn} user="self" />
-            {remoteStream!=null && <DraggableDiv Stream={remoteStream} user="other"/>}
+            <Chat roomId={localStorage.getItem('roomID', roomId)} />
+            <DraggableDiv Stream={myStream} isCamOn={isCamOn} user="self" />
+            {remoteStream != null && <DraggableDiv Stream={remoteStream} user="other" />}
 
 
             <div className="footer">

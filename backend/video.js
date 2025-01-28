@@ -97,7 +97,7 @@ io.on("connection", (socket) => {
     }
 
     console.log(`user:left event emitted for ${email} (${socket.id})`);
-    disconnectAllUsers();
+    // disconnectAllUsers();
   });
 
 

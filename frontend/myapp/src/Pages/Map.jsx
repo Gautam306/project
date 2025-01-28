@@ -201,6 +201,7 @@ export const Map = () => {
                             });
                         socket.current.emit("room:join", { email: userInfo.username, room: roomId });
                         isSocketUpdate(socket.current);
+                        localStorage.setItem('roomID',roomId);
                         console.log("video-call-start", socket.current,"        ",roomId);
                         // this.activeRooms[otherPlayerId] = true;
                         }
@@ -217,8 +218,9 @@ export const Map = () => {
                                 socket.current?.disconnect();
                                 socket.current = null;
                                 isSocketUpdate(null);
+                                localStorage.removeItem('roomID');
                                 }
-                            }, 5000)
+                            }, 100)
                         }
                     })
                  

@@ -60,9 +60,12 @@ export const VideoFrame = () => {
                 <Map />
             </div>
             {/* <VideoCall/> */}
-            <Chat roomId={localStorage.getItem('roomID', roomId)} />
+            <Chat roomId={localStorage.getItem('roomID')} />
             <DraggableDiv Stream={myStream} isCamOn={isCamOn} user="self" />
-            {remoteStream != null && <DraggableDiv Stream={remoteStream} user="other" />}
+            {remoteStream.map((item, index) => (
+                <DraggableDiv key={index} Stream={item} user="other" />
+            ))}
+            {/* {remoteStream.length>0 && <DraggableDiv Stream={remoteStream} user="other" />} */}
 
 
             <div className="footer">

@@ -66,7 +66,7 @@ const RoomPage = () => {
     socket.current?.emit("user:call", { to: id, offer });
   }, [remoteSocketId, socket.current]);
 
-  const handleIncommingCall = useCallback(
+  const handleIncommingCall = 
     async ({ from, offer }) => {
 
       console.log("handleIncommingCall");
@@ -83,9 +83,7 @@ const RoomPage = () => {
       socket.current?.emit("call:accepted", { to: from, ans });
       // if(myStream!==null)
       //   setMyStream(stream);
-    },
-    [socket.current, myStream]
-  );
+    };
 
   const sendStreams = useCallback(async () => {
     console.log("sendStreams", myStream);
@@ -170,11 +168,27 @@ const RoomPage = () => {
 
   }, [sendStreams]);
 
+  const addRemoteStream = (newStream) => {
+    // Check if the stream is already present in the array
+    console.log("addRemoteStream 1",remoteStream);
+    const isStreamPresent = remoteStream.some(
+      (stream) => {stream.id === newStream.id || console.log(stream.id," addRemoteStream   ",newStream.id)}
+    );
+    console.log("addRemoteStream 2",isStreamPresent);
+    if (!isStreamPresent) {
+      // Add the new stream if it's not already in the array
+      
+      setRemoteStream([...remoteStream,newStream]); // Update the state with a new array reference
+    }
+  };
+  
   useEffect(() => {
     peer.peer.addEventListener("track", async (ev) => {
       const remoteStream = ev.streams;
       console.log("GOT TRACKS!!");
-      setRemoteStream(remoteStream[0]);
+      // setRemoteStream(remoteStream[0]);
+      addRemoteStream(remoteStream[0]);
+      
     });
   }, []);
 

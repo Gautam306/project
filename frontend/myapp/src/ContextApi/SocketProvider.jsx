@@ -9,9 +9,9 @@ export const useSocket = () => {
 };
 
 export const SocketProvider = ({ children }) => {
-  const [remoteStream, setRemoteStream] = useState(null);
+  const [remoteStream, setRemoteStream] = useState([]);
   const [myStream, setMyStream] = useState(null);
-  const [remoteSocketId, setRemoteSocketId] = useState(null);
+  const [remoteSocketId, setRemoteSocketId] = useState([]);
 
   const socket = useRef(null);
 
@@ -30,6 +30,9 @@ export const SocketProvider = ({ children }) => {
     remoteSocketStreamIdRef.current = remoteStream;
   }, [remoteStream]);
   console.log("remoteSocketid", remoteSocketIdRef.current);
+
+
+
   const handleCallDisconnect = async (id) => {
     console.log(`User with socket ID ${id} left the chat.`, remoteSocketIdRef.current);
     console.log("remoteSocketid inside", remoteSocketIdRef.current, " ", remoteSocketStreamIdRef.current);
@@ -51,14 +54,21 @@ export const SocketProvider = ({ children }) => {
           }
         });
 
-        remoteSocketStreamIdRef.current.getTracks().forEach((track) => track.stop());
+        if (remoteSocketStreamIdRef.current) {
+          remoteSocketStreamIdRef.current.forEach((item) => {
+            item.getTracks().forEach((track) => {
+              track.stop(); // Stops each track
+            });
+          });
+        }
+        
         console.log("remoteSocketStreamIdRef.current ",remoteSocketStreamIdRef.current);
 
       }
 
       // Clear remote socket ID and stream
       setRemoteSocketId(null);
-      setRemoteStream(null);
+      setRemoteStream([]);
       setMyStream(null);
       // remoteSocketStreamIdRef.current=null;
     }

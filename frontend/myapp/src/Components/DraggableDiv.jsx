@@ -41,7 +41,7 @@ const DraggableDiv = ({Stream,isCamOn,user}) => {
       onMouseLeave={handleMouseUp} // Stop dragging if the mouse leaves the div
     >
       {user}
-      {Stream && Stream.getVideoTracks()[0].enabled?<ReactPlayer playing muted height="90%" width='90%'  url={Stream} />:<CameraOff/>}
+      {Stream && Stream?.getVideoTracks()?.[0]?.enabled?<ReactPlayer playing muted height="90%" width='90%'  url={Stream} />:<CameraOff/>}
     </div>
   );
 };

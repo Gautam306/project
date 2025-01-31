@@ -30,7 +30,7 @@ export const Map = () => {
 
 
         if (userInfo) {
-            gamesocket.current = io('http://localhost:8002', {
+            gamesocket.current = io('http://13.201.133.130:8002', {
                 path: "/socket.io",
                 transports: ["websocket"],
             });
@@ -195,7 +195,7 @@ export const Map = () => {
                
                     gamesocket.current.on('video-call-start', (roomId) => {
                         if (!socket.current) {
-                            socket.current = io('http://localhost:8000', {
+                            socket.current = io('http://13.201.133.130:8000', {
                                 path: "/socket.io",
                                 transports: ["websocket"],
                             });
@@ -377,7 +377,7 @@ export const Map = () => {
             //         if (!this.activeRooms[otherPlayerId]) {
             //             // Initialize socket connection and join the room if not already joined
             //             if (!socket.current) {
-            //                 socket.current = io('http://localhost:8000', {
+            //                 socket.current = io('http://13.201.133.130:8000', {
             //                     path: "/socket.io",
             //                     transports: ["websocket"],
             //                 });

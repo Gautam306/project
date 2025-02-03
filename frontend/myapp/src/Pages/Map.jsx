@@ -30,7 +30,7 @@ export const Map = () => {
 
 
         if (userInfo) {
-            gamesocket.current = io('http://13.201.133.130:8002', {
+            gamesocket.current = io('https://metaverse.devsonline.in:8002', {
                 path: "/socket.io",
                 transports: ["websocket"],
             });
@@ -195,7 +195,7 @@ export const Map = () => {
                
                     gamesocket.current.on('video-call-start', (roomId) => {
                         if (!socket.current) {
-                            socket.current = io('http://13.201.133.130:8000', {
+                            socket.current = io('http://metaverse.devsonline.in:8000', {
                                 path: "/socket.io",
                                 transports: ["websocket"],
                             });

@@ -1,6 +1,16 @@
+const fs = require("fs");
+const https = require("https");
 const { Server } = require("socket.io");
-
-const io = new Server(8002, {
+const credentials = {
+  key: fs.readFileSync('privkey1.pem'),
+  cert: fs.readFileSync('fullchain1.pem'),
+  ca: fs.readFileSync('chain1.pem'),
+};
+const httpsServer = https.createServer(credentials, (req, res) => {
+  res.writeHead(200);
+  res.end("Socket.io HTTPS Server Running!");
+});
+const io = new Server(httpsServer, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"],
@@ -190,3 +200,6 @@ io.on("connection", (socket) => {
     }, 1000); // Run proximity check every second
 
 });
+httpsServer.listen(8002, () => {
+    console.log("HTTPS Socket.io server running on port 8002");
+  });

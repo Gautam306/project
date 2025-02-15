@@ -239,65 +239,11 @@ const RoomPage = () => {
     handleCallDisconnect
   ]);
 
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isCamOn, setIsCamOn] = useState(true);
-
-  const toggleMic = () => {
-    if (myStream) {
-      const audioTrack = myStream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsMicOn(audioTrack.enabled);
-      }
-    }
-  };
-
-  const toggleCam = () => {
-    if (myStream) {
-      const videoTrack = myStream.getVideoTracks()[0];
-      console.log("videoTrack ", videoTrack);
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setIsCamOn(videoTrack.enabled);
-        console.log("videoTrack ", videoTrack);
-      }
-    }
-  };
 
   return (
-    <></>
-    // <div className="room-page">
-    //   <header className="header">
-    //     <h1>Room Page</h1>
-    //   </header>
-    //   <div className="streams-container">
-    //     <div className="stream-box my-stream">
-    //       <h3>You</h3>
-    //       {myStream ? (
-    //         <Reactf playing muted height="100%" width="100%" url={myStream} />
-    //       ) : (
-    //         <p>No stream available</p>
-    //       )}
-    //     </div>
-    //     <div className="stream-box remote-stream" >
-    //       <h3>Remote Stream </h3>
-    //       {remoteStream ? (
-    //         <ReactPlayer playing height="70%" width="100%" url={remoteStream} />
-    //       ) : (
-    //         <p>{remoteSocketId ? "Waiting for remote stream..." : "No one in room"}</p>
-    //       )}
-    //     </div>
-    //   </div>
-    //   <div className="controls">
-    //     <button onClick={toggleMic} className="control-button">
-    //       {isMicOn ? <FaMicrophone /> : <FaMicrophoneSlash />}
-    //     </button>
-    //     <button onClick={toggleCam} className="control-button">
-    //       {isCamOn ? <FaVideo /> : <FaVideoSlash />}
-    //     </button>
-    //   </div>
-    //   {/* <Chat roomId={window.location.pathname.split('/').pop()} /> */}
-    // </div>
+    <>
+    </>
+   
 
   );
 };

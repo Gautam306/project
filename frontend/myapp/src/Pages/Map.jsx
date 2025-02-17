@@ -8,6 +8,7 @@ import { useSocket } from "../ContextApi/SocketProvider";
 import { Socket } from 'socket.io-client';
 import VideoCall from "../Components/VideoCall";
 import SFU from "../Components/SFU";
+import Chat from '../Components/Chat';
 
 export const Map = () => {
     const gameRef = useRef(null);
@@ -204,7 +205,7 @@ export const Map = () => {
                             socket.current = io('http://localhost:5001');
                             setRoomId(roomId);
                             // email: userInfo.username,
-                        socket.current.emit("join-room", {roomId});
+                        socket.current.emit("join-room", {email: userInfo.username,roomId});
                         isSocketUpdate(socket.current);
                         localStorage.setItem('roomID',roomId);
                         console.log("video-call-start", socket.current,"        ",roomId);
@@ -212,25 +213,13 @@ export const Map = () => {
                         }
                     })
 
-                    gamesocket.current.on('video-call-end', (roomId) => {
-                        if (socket.current) {
-                            socket.current?.disconnect();
+                    gamesocket.current.on('video-call-end', () => {
+                        // if (socket.current) {
+                            socket.current.disconnect();
                             socket.current = null;
-                        //   socket.current.emit("disconnect-player");
-                        //     socket.current.on('all-user-before-disconnect', handleDisconnectionStream);
-                            // setTimeout(() => {
-                            //     console.log("Players out of proximity, distance:1223", remoteStream ,roomId,socket.current);
-                            //     // setRemoteStream(null);
-                            //     if (socket.current){
-                            //     // socket.current?.disconnect();
-                            //     socket.current = null;
-                            //     isSocketUpdate(null);
-                            //     localStorage.removeItem('roomID');
-                            //     }
-                            // }, 100)
-                                isSocketUpdate(null);
-                                localStorage.removeItem('roomID');
-                        }
+                            isSocketUpdate(null);
+                            localStorage.removeItem('roomID');
+                        // }
                     })
                  
 
@@ -517,6 +506,7 @@ export const Map = () => {
     return (
         <>
              {/* <VideoCall/> */}
+             <Chat/>
              <SFU key={Date.now()} roomId={roomIds}/>
             <div id="phaser-game" style={{ width: "100vw", height: "85vh", }}></div>;
         </>)

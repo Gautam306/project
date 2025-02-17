@@ -3,7 +3,7 @@ import { Send, ChevronDown, ChevronUp } from "react-feather";
 import { useSocket } from "../ContextApi/SocketProvider";
 import Draggable from "react-draggable";
 
-const Chat = ({ roomId }) => {
+const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);

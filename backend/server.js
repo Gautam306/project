@@ -8,9 +8,11 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: "*" } });
 
+
 let workers = [];
 let rooms = {};
 let peers = {};
+const socketidToEmailMap = new Map();
 
 const createWorkers = async () => {
     for (let i = 0; i < 2; i++) {
@@ -110,12 +112,13 @@ io.on("connection", async (socket) => {
     console.log("Client connected:", socket.id);
 
     // 2. Update the join-room handler to properly handle producer list
-    socket.on("join-room", async ({ roomId }) => {
+    socket.on("join-room", async ({ email,roomId }) => {
         try {
             console.log("join-room: ",roomId);
             const room = await getOrCreateRoom(roomId);
             socket.roomId = roomId;
-
+            
+            socketidToEmailMap.set(socket.id, email);
             // Add peer to room
             room.peers.set(socket.id, {
                 socket,
@@ -390,7 +393,28 @@ io.on("connection", async (socket) => {
             console.error("Error handling disconnect:", error);
         }
     });
+
+      // Chat
+  socket.on("chat:send", (data) => {
+    const { message, timestamp, room } = data;
+    const senderEmail = socketidToEmailMap.get(socket.id);
+    console.log("data chat ", data, senderEmail, room);
+    // Broadcast the message to all users in the room except the sender
+
+    socket.to(room).emit("chat:message", {
+      sender: senderEmail,
+      message,
+      timestamp
+    });
+    // io.emit("chat:message", {
+    //   sender: senderEmail || "Unknown", // Fallback if no senderEmail
+    //   message,
+    //   timestamp,
+    // });
+  });
 });
+
+
 
 createWorkers();
 server.listen(5001, () => console.log("Server running on port 5001"));

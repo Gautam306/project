@@ -60,7 +60,7 @@ export const VideoFrame = () => {
                 <Map />
             </div>
             {/* <VideoCall/> */}
-            <Chat roomId={localStorage.getItem('roomID')} />
+            {/* <Chat key={Date.now()}/> */}
             {/* <DraggableDiv Stream={myStream} isCamOn={isCamOn} user="self" />
             {remoteStream.map((item, index) => (
                 <DraggableDiv key={index} Stream={item} user="other" />

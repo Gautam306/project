@@ -412,7 +412,17 @@ io.on("connection", async (socket) => {
     //   timestamp,
     // });
   });
+
+
+  socket.on("video-pause", (roomID) => {
+    console.log("video-pause ",roomID , socket?.id); 
+    socket.broadcast.to(roomID).emit("video:pause",{roomID});
+  
+  });
+
 });
+
+
 
 
 

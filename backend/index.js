@@ -10,7 +10,7 @@ const io = new Server(8002, {
 
 const activeUsers = {}; // Tracks users by socket ID
 const UserCorrespondingRoom = {}; // Tracks users per room (mapId)
-const proximityDistance = 200; // Example proximity distance for triggering video call
+const proximityDistance = 30; // Example proximity distance for triggering video call
 const videoRooms = {}; //
 
 const calculateDistance = (x1, y1, x2, y2) => {

@@ -1,72 +1,86 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import Map from "./Map";
-import DraggableDiv from "../Components/DraggableDiv";
 import { Mic, MicOff, Video, VideoOff } from "react-feather";
 import { useSocket } from "../ContextApi/SocketProvider";
-import VideoCall from '../Components/VideoCall'
-import Chat from "../Components/Chat";
+import { useVideo } from "../ContextApi/VideoControl";
+
 export const VideoFrame = () => {
     const [isMicOn, setIsMicOn] = useState(true);
     const [isCamOn, setIsCamOn] = useState(true);
-    const { socket, remoteStream, myStream, setMyStream } = useSocket();
-    // const [myStream,setMyStream]=useState(null);
-    // const EnterRoom = async () => {
-
-    //     const stream = await navigator.mediaDevices.getUserMedia({
-    //       audio: true,
-    //       video: true,
-    //     });
-    //     console.log("enterRoom", stream);
-
-    //     // localStorage.setItem("stream",stream);
-    //     if (myStream === null)
-    //       setMyStream(stream);
-    //   }
-    //   useEffect(() => {
-    //     console.log("myStream useEffect ", myStream);
-    //     EnterRoom();
-    //   }, [myStream])
+    const {producersRef,streamRef,socket } = useSocket();
+    const {videoControl,setVideoControl}=useVideo();
+    
+    const toggleVideo = async () => {
+        try {
+          if (streamRef.current) {
+            const videoTrack = streamRef.current.getVideoTracks()[0];
+            if (videoTrack) {
+              videoTrack.enabled = !videoTrack.enabled;
+              // setIsVideoEnabled(videoTrack.enabled);
+    
+              // If we have a video producer, pause/resume it
+              const videoProducer = producersRef.current.get('video');
+              if (videoProducer) {
+                if (videoTrack.enabled) {
+                  await videoProducer.resume();
+                } else {
+                  await videoProducer.pause();
+                }
+                setVideoControl(!videoControl);
+                socket.current?.emit("video-pause", {roomID:localStorage.getItem('roomID')});
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Error toggling video:", err);
+          setError("Failed to toggle video");
+        }
+      };
+    
+      const toggleAudio = async () => {
+        try {
+          if (streamRef.current) {
+            const audioTrack = streamRef.current.getAudioTracks()[0];
+            if (audioTrack) {
+              audioTrack.enabled = !audioTrack.enabled;
+              // setIsAudioEnabled(audioTrack.enabled);
+    
+              // If we have an audio producer, pause/resume it
+              const audioProducer = producersRef.current.get('audio');
+              if (audioProducer) {
+                if (audioTrack.enabled) {
+                  await audioProducer.resume();
+                } else {
+                  await audioProducer.pause();
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Error toggling audio:", err);
+          setError("Failed to toggle audio");
+        }
+      };
+    
 
     const toggleMic = () => {
-        if (myStream) {
-            const audioTrack = myStream.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                setIsMicOn(audioTrack.enabled);
-            }
-        }
+        toggleAudio();
+        setIsMicOn(!isMicOn);
     };
 
     const toggleCam = () => {
-        if (myStream) {
-            const videoTrack = myStream.getVideoTracks()[0];
-            console.log("videoTrack ", videoTrack);
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-                setIsCamOn(videoTrack.enabled);
-                console.log("videoTrack ", videoTrack);
-            }
-            setMyStream(myStream);
-        }
-
+        toggleVideo();
+        setIsCamOn(!isCamOn);
     };
 
-
-
+    // Memoize Map component to prevent re-renders
+    const memoizedMap = useMemo(() => <Map />, []);
 
     return (
-        <div className="video-call-container" >
+        <div className="video-call-container">
             <div className="video-frame">
-                <Map />
+                {memoizedMap}
             </div>
-            {/* <VideoCall/> */}
-            {/* <Chat key={Date.now()}/> */}
-            {/* <DraggableDiv Stream={myStream} isCamOn={isCamOn} user="self" />
-            {remoteStream.map((item, index) => (
-                <DraggableDiv key={index} Stream={item} user="other" />
-            ))} */}
-            {/* {remoteStream.length>0 && <DraggableDiv Stream={remoteStream} user="other" />} */}
-
 
             <div className="footer">
                 <button className="audio-button" onClick={toggleMic}>

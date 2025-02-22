@@ -1,10 +1,26 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactPlayer from "react-player";
-import {CameraOff} from "react-feather";
+import { CameraOff } from "react-feather";
 
-const DraggableDiv = ({Stream,isCamOn,user}) => {
-  console.log("STREAM ",Stream);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+
+const DraggableDiv = ({ Stream, isCamOn, user }) => {
+  
+  // console.log("STREAM ", Stream?.getVideoTracks()[0]);
+  
+  const [position, setPosition] = useState({
+    x: Math.random() * 100,
+    y: Math.random() * 50
+  });
+
+  useEffect(()=>{
+
+    if(user==="Your")
+      {
+        // setPosition({x:0,y:0}) 
+      }
+  },[user])
+
   const [dragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   // console.log(Stream);
@@ -29,8 +45,11 @@ const DraggableDiv = ({Stream,isCamOn,user}) => {
     setDragging(false);
   };
 
+ 
+
   return (
     <div
+      // key={videoControl}
       className="video"
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
@@ -41,8 +60,8 @@ const DraggableDiv = ({Stream,isCamOn,user}) => {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp} // Stop dragging if the mouse leaves the div
     >
-      {user}
-      {Stream ?<ReactPlayer playing muted height="90%" width='90%'  url={Stream} />:<CameraOff/>}
+      {/* {user} */}
+      {Stream && Stream.getVideoTracks()[0]?.enabled ? <ReactPlayer  playing={Stream.getVideoTracks()[0]?.enabled} height="100%" width='100%' url={Stream} muted={!Stream.getAudioTracks()[0]?.enabled} /> : <CameraOff />}
     </div>
   );
 };

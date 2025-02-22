@@ -5,27 +5,32 @@ import ReactPlayer from "react-player";
 import { useSocket } from "../ContextApi/SocketProvider";
 import DraggableDiv from "./DraggableDiv";
 
+
 // const socket = io("http://localhost:5000");
 
-const App = (roomId) => {
-  console.log("roomId ",roomId.roomId);
-  const { socket } = useSocket();
-
+const App = ({ roomId }) => {
+  console.log("roomId ", roomId);
+  const { socket,audioMic,videoCallMic,producersRef,streamRef,  } = useSocket();
+  // const audioMic=useRef(null), videoCallMic=useRef(null);
   // const [roomId, setRoomId] = useState("10");
   const [joined, setJoined] = useState(false);
   const [remoteStreams, setRemoteStreams] = useState({});
   const [peers, setPeers] = useState([]);
   const [error, setError] = useState(null);
-  const [localStream,setlocalStream]=useState(null);
+  const [localStream, setlocalStream] = useState(null);
   const localVideoRef = useRef(null);
   const deviceRef = useRef(null);
   const producerTransportRef = useRef(null);
-  const producersRef = useRef(new Map());
+  // const producersRef = useRef(new Map());
   const consumerTransportsRef = useRef(new Map());
   const consumersRef = useRef(new Map());
-  const streamRef = useRef(null);
-  
+  const[videoControl,setVideoControl]=useState(true);
+  // const streamRef = useRef(null);
 
+  // const [audioMic, setAudioMic] = useState(false);
+  // const [videoCallMic, setVideoCallMic] = useState(false);
+
+  // console.log("localStream ",localStream);
   // useEffect(() => {
   //   console.log("sfu socket",socket);
   //   // socket.current = io('http://localhost:5001')
@@ -49,9 +54,13 @@ const App = (roomId) => {
     socket?.current?.off("consumer-created");
     socket?.current?.off("connect-transport");
     socket?.current?.off('existing-producers');
+    
 
 
-
+    socket.current?.on("video-pause", (roomID) => {
+      console.log("receive video-pause notification");
+      setVideoControl(!videoControl);
+    });
 
 
     socket?.current?.on("peers-in-room", (peerList) => {
@@ -93,7 +102,7 @@ const App = (roomId) => {
         deviceRef.current = new mediasoupClient.Device();
         await deviceRef.current.load({ routerRtpCapabilities: rtpCapabilities });
         console.log("✅ Device loaded with RTP Capabilitiescreate-transport direction send");
-        socket?.current?.emit("create-transport", { direction: "send", roomId:roomId.roomId });
+        socket?.current?.emit("create-transport", { direction: "send", roomId: roomId });
         setJoined(true);
       } catch (err) {
         console.error("Failed to load device:", err);
@@ -114,7 +123,7 @@ const App = (roomId) => {
         producerTransportRef.current.on("connect", async ({ dtlsParameters }, callback, errback) => {
           try {
             console.log("producer Transport");
-            socket?.current?.emit("connect-transport", { transportId: id, dtlsParameters, roomId:roomId.roomId });
+            socket?.current?.emit("connect-transport", { transportId: id, dtlsParameters, roomId: roomId });
             callback();
           } catch (error) {
             errback(error);
@@ -123,7 +132,7 @@ const App = (roomId) => {
 
         producerTransportRef.current.on("produce", async ({ kind, rtpParameters }, callback, errback) => {
           try {
-            socket?.current?.emit("produce", { transportId: id, kind, rtpParameters, roomId:roomId.roomId });
+            socket?.current?.emit("produce", { transportId: id, kind, rtpParameters, roomId: roomId });
             socket?.current?.once("producer-created", ({ id }) => callback({ id }));
           } catch (error) {
             errback(error);
@@ -197,7 +206,7 @@ const App = (roomId) => {
           [producerPeerId]: newStream
         }));
 
-        socket?.current?.emit("resume-consumer", { consumerId: consumer.id, roomId:roomId.roomId });
+        socket?.current?.emit("resume-consumer", { consumerId: consumer.id, roomId: roomId });
         await consumer.resume();
       } catch (error) {
         console.error("Error consuming media:", error);
@@ -235,6 +244,21 @@ const App = (roomId) => {
     };
   }, [roomId]);
 
+ 
+
+ 
+   useEffect(() => {
+      socket.current?.on("video:pause", ({ roomID }) => {
+       console.log("video:paused ",roomID);
+       setVideoControl(prev => !prev);
+      });
+  
+      return () => {
+        socket.current?.off("video:pause");
+
+      };
+    }, [socket.current]);
+
   const createConsumerTransport = async (producerId, producerPeerId) => {
     try {
       console.log("Creating consumer transport for producer:", producerId, "peer:", producerPeerId);
@@ -245,7 +269,7 @@ const App = (roomId) => {
         return;
       }
       console.log("✅ Device loaded create- recv");
-      socket?.current?.emit("create-transport", { direction: "recv", roomId:roomId.roomId });
+      socket?.current?.emit("create-transport", { direction: "recv", roomId: roomId });
 
       return new Promise((resolve) => {
         socket?.current?.once("transport-created-recv", async ({ id, iceParameters, iceCandidates, dtlsParameters }) => {
@@ -264,7 +288,7 @@ const App = (roomId) => {
               socket?.current?.emit("connect-transport", {
                 transportId: id,
                 dtlsParameters,
-                roomId:roomId.roomId
+                roomId: roomId
               });
               callback();
             });
@@ -276,7 +300,7 @@ const App = (roomId) => {
                 consumerTransportId: id,
                 producerId,
                 rtpCapabilities: deviceRef.current.rtpCapabilities,
-                roomId:roomId.roomId,
+                roomId: roomId,
                 producerPeerId
               });
             }
@@ -305,10 +329,11 @@ const App = (roomId) => {
         },
         audio: true
       });
-      console.log("startMedia call localVideRef set before",localVideoRef.current);
+      console.log("startMedia call localVideRef set before", localVideoRef.current);
       setlocalStream(streamRef.current);
+
       if (localVideoRef.current) {
-        console.log("startMedia call localVideRef set");
+        console.log("startMedia call localVideRef set", streamRef.current);
         localVideoRef.current.srcObject = streamRef.current;
       }
 
@@ -350,6 +375,73 @@ const App = (roomId) => {
     }
   };
 
+
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+
+  const toggleVideo = async () => {
+    try {
+      if (streamRef.current) {
+        const videoTrack = streamRef.current.getVideoTracks()[0];
+        if (videoTrack) {
+          videoTrack.enabled = !videoTrack.enabled;
+          setIsVideoEnabled(videoTrack.enabled);
+
+          // If we have a video producer, pause/resume it
+          const videoProducer = producersRef.current.get('video');
+          if (videoProducer) {
+            if (videoTrack.enabled) {
+              await videoProducer.resume();
+            } else {
+              await videoProducer.pause();
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error toggling video:", err);
+      setError("Failed to toggle video");
+    }
+  };
+
+  const toggleAudio = async () => {
+    try {
+      if (streamRef.current) {
+        const audioTrack = streamRef.current.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = !audioTrack.enabled;
+          // setIsAudioEnabled(audioTrack.enabled);
+
+          // If we have an audio producer, pause/resume it
+          const audioProducer = producersRef.current.get('audio');
+          if (audioProducer) {
+            if (audioTrack.enabled) {
+              await audioProducer.resume();
+            } else {
+              await audioProducer.pause();
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error toggling audio:", err);
+      setError("Failed to toggle audio");
+    }
+  };
+
+
+  useEffect(() => {
+
+    toggleAudio();
+
+  }, [audioMic.current]);
+
+  useEffect(() => {
+    console.log("videoCallMic ",videoCallMic);
+    toggleVideo();
+
+  }, [videoCallMic.current])
+
   return (
     <div className="p-4">
       {error && (
@@ -381,28 +473,33 @@ const App = (roomId) => {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="relative">
               {/* <h3 className="text-lg mb-2">My Video</h3> */}
-              <DraggableDiv Stream={localStream} isCamOn={true} user="yours" />
-              {/* <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full border-2 border-blue-500 rounded"
-              /> */}
+              {localStream && <DraggableDiv key={videoControl} Stream={localStream} isCamOn={true} user="yours" />}
+
             </div>
 
             {Object.entries(remoteStreams).map(([peerId, stream]) => (
               console.log("remoteStreams ", peerId, " ", stream) ||
-              <DraggableDiv Stream={stream} isCamOn={true} user="other" />
-              // <div key={peerId} className="relative">
-              //   <h3 className="text-lg mb-2">
-              //     {peers.find(p => p.id === peerId)?.name || `Peer ID ${peerId}`}
-              //   </h3>
-              //   <DraggableDiv Stream={stream} isCamOn={true} user="other"/>
-              //   {/* <ReactPlayer playing muted height="90%" width='90%' url={stream} /> */}
-              // </div>
+              <DraggableDiv key={videoControl} Stream={stream} isCamOn={true} user="other" />
+
             ))}
           </div>
+          {/* <div className="flex gap-4">
+            <button
+              onClick={toggleVideo}
+              className={`px-4 py-2 rounded-md ${isVideoEnabled ? 'bg-blue-500' : 'bg-red-500'
+                } text-white`}
+            >
+              {isVideoEnabled ? 'Turn Off Video' : 'Turn On Video'}
+            </button>
+
+            <button
+              onClick={toggleAudio}
+              className={`px-4 py-2 rounded-md ${isAudioEnabled ? 'bg-blue-500' : 'bg-red-500'
+                } text-white`}
+            >
+              {isAudioEnabled ? 'Turn Off Audio' : 'Turn On Audio'}
+            </button>
+          </div> */}
         </div>
       )}
     </div>

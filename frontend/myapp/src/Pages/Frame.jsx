@@ -1,10 +1,23 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo,useEffect } from "react";
 import Map from "./Map";
+import {useNavigate} from "react-router-dom";
 import { Mic, MicOff, Video, VideoOff } from "react-feather";
 import { useSocket } from "../ContextApi/SocketProvider";
 import { useVideo } from "../ContextApi/VideoControl";
 
 export const VideoFrame = () => {
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    window.addEventListener("beforeunload", () => {
+      localStorage.setItem("isRefreshed", "true");
+    });
+
+    if (localStorage.getItem("isRefreshed")) {
+      localStorage.removeItem("isRefreshed");
+      navigate("/");
+    }
+  }, []);
     const [isMicOn, setIsMicOn] = useState(true);
     const [isCamOn, setIsCamOn] = useState(true);
     const {producersRef,streamRef,socket } = useSocket();
@@ -74,7 +87,7 @@ export const VideoFrame = () => {
     };
 
     // Memoize Map component to prevent re-renders
-    const memoizedMap = useMemo(() => <Map />, []);
+    const memoizedMap = useMemo(() => <Map isMicOn={isMicOn} isCamOn={isCamOn}/>, []);
 
     return (
         <div className="video-call-container">

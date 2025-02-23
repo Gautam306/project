@@ -33,8 +33,8 @@ io.on("connection", (socket) => {
                 username: username,
                 id: socket.id,
                 mapId: mapId,
-                x: 400, // Default position
-                y: 3840 - 100,
+                x: 1326/2, // Default position
+                y: 545/2,
                 anim: "walk-up",
             };
 

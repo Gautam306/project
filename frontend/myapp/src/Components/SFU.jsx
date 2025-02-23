@@ -8,7 +8,7 @@ import DraggableDiv from "./DraggableDiv";
 
 // const socket = io("http://localhost:5000");
 
-const App = ({ roomId }) => {
+const App = ({ roomId,isMicOn, isCamOn }) => {
   console.log("roomId ", roomId);
   const { socket,audioMic,videoCallMic,producersRef,streamRef,  } = useSocket();
   // const audioMic=useRef(null), videoCallMic=useRef(null);
@@ -434,13 +434,13 @@ const App = ({ roomId }) => {
 
     toggleAudio();
 
-  }, [audioMic.current]);
+  }, [audioMic.current,isCamOn]);
 
   useEffect(() => {
     console.log("videoCallMic ",videoCallMic);
     toggleVideo();
 
-  }, [videoCallMic.current])
+  }, [videoCallMic.current,isMicOn])
 
   return (
     <div className="p-4">

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
-import jsonFile from '../assets/officev1.json';
+import jsonFile from '../assets/officev2.json';
 import setupImage from '../assets/office-top1.png';
 import setupImage2 from '../assets/office-down2.png';
 import avatarImage from '../assets/char.png';
@@ -11,7 +11,7 @@ import VideoCall from "../Components/VideoCall";
 import SFU from "../Components/SFU";
 import Chat from '../Components/Chat';
 
-export const Map = () => {
+export const Map = ({isMicOn, isCamOn}) => {
     const gameRef = useRef(null);
     const gamesocket = useRef(null);
     const [roomIds, setRoomId] = useState("10");
@@ -88,21 +88,98 @@ export const Map = () => {
                 const tileset2 = map.addTilesetImage("office-down", "setup2");
                 const groundLayer = map.createLayer("Tile Layer 1", [tileset, tileset2])
                 // const wallsLayer2 = map.createLayer("Layer1", tileset)
-                const wallsLayer = map.createLayer("Layer2", tileset)
+                const wallsLayer = map.createLayer("Tile Layer 1", tileset2)
                 const Layer4 = map.createLayer("Layer4", tileset);
                 const Layer5 = map.createLayer("Layer 5", tileset);
 
-                // Optional: Set collision properties if needed
-                groundLayer.setCollisionByProperty({ collides: true });
-                // wallsLayer2.setCollisionByProperty({ collides: true });
-                wallsLayer?.setCollisionByProperty({ collides: true });
-                Layer4?.setCollisionByProperty({ collides: true });
-                Layer5?.setCollisionByProperty({ collides: true });
+                // Convert tile layers to matter bodies
+                this.matter.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-                this.physics.world.bounds.width = map.widthInPixels;
-                this.physics.world.bounds.height = map.heightInPixels;
-                console.log("map ", map.heightInPixels);
-                this.player = this.physics.add.sprite(400, map.heightInPixels - 80, "player");
+                const layers1 = [groundLayer, wallsLayer, Layer4, Layer5];
+                layers1.forEach(layer => {
+                    if (layer) {
+                        const tiles = layer.filterTiles(tile => tile.properties.collides);
+                        tiles.forEach(tile => {
+                            const body = this.matter.add.rectangle(
+                                tile.pixelX + tile.width / 2,
+                                tile.pixelY + tile.height / 2,
+                                tile.width,
+                                tile.height,
+                                {
+                                    isStatic: true,
+                                    label: 'wall'
+                                }
+                            );
+                        });
+                    }
+                });
+                // Parse object layers for polygons
+                const createPolygonCollider = (tileData, tileX, tileY) => {
+                    if (tileData.objectgroup && tileData.objectgroup.objects) {
+                        tileData.objectgroup.objects.forEach(object => {
+                            if (object.polygon) {
+                                // Adjust vertices to tile position
+                                const vertices = object.polygon.map(point => ({
+                                    x: tileX * 32 + object.x + point.x,
+                                    y: tileY * 32 + object.y + point.y
+                                }));
+            
+                                // Create polygon body
+                                this.matter.add.fromVertices(
+                                    tileX * 32 + object.x,
+                                    tileY * 32 + object.y,
+                                    vertices,
+                                    {
+                                        isStatic: true,
+                                        label: 'wallPolygon',
+                                        collisionFilter: {
+                                            category: 0x0002, // Wall category
+                                            mask: 0x0001      // Player category
+                                        },
+                                        render: {
+                                            fillStyle: 'transparent'
+                                        }
+                                    }
+                                );
+                            }
+                        });
+                    }
+                };
+            
+                // Process all layers for polygon collisions
+                const layers = [groundLayer, wallsLayer, Layer4, Layer5];
+                layers.forEach(layer => {
+                    if (layer) {
+                        layer.layer.data.forEach((row, y) => {
+                            row.forEach((tile, x) => {
+                                if (tile.index !== -1) {  // If tile exists
+                                    const tileData = map.tilesets[0].tileData[tile.index - 1];
+                                    if (tileData) {
+                                        // console.log("tileDataDown tileData","  ",tileData);
+                                        createPolygonCollider(tileData, x, y);
+                                    }
+                                    const tileDataDown = map.tilesets[1].tileData[tile.index-1];
+                                    
+                                    if(tileDataDown)
+                                    {
+                                        // console.log("tileDataDown ",tileDataDown,"  ",tileData);
+                                        createPolygonCollider(tileDataDown,x,y);
+                                    }
+                                }
+                            });
+                        });
+                    }
+                });
+            
+                // Create player with proper collision category
+          
+                this.player = this.matter.add.sprite(map.widthInPixels/2, map.heightInPixels/2, "player", null, {
+                    friction: 0,
+                    frictionAir: 0.001,
+                    density: 0.001,
+                    label: 'player'
+                });
+                this.player.setFixedRotation(); // Prevent rotation
                 this.nameTagGroup = this.add.group();
                 this.player.setScale(0.4);
                 // Setup the camera to follow the player
@@ -126,9 +203,17 @@ export const Map = () => {
 
                 // Add to the group so they move together
                 this.nameTagGroup.setVisible(true);
-                this.player.setCollideWorldBounds(true);
+                // this.player.setCollideWorldBounds(true);
                 // // this.physics.add.collider(this.player, wallsLayer2);
-                this.physics.add.collider(this.player, groundLayer);
+                // this.physics.add.collider(this.player, groundLayer);
+                this.matter.world.on('collisionstart', (event) => {
+                    event.pairs.forEach((pair) => {
+                        const bodyA = pair.bodyA;
+                        const bodyB = pair.bodyB;
+                        // Handle collisions here if needed
+                    });
+                });
+
                 // this.physics.add.collider(this.player, Layer4);
                 // this.physics.add.collider(this.player, Layer5);
                 // this.physics.add.collider(this.player, wallsLayer);
@@ -187,6 +272,7 @@ export const Map = () => {
 
                 gamesocket.current.on('video-call-start', (roomId) => {
                     if (!socket.current) {
+                        
                         socket.current = io('http://localhost:5001');
                         setRoomId(roomId);
                         // email: userInfo.username,
@@ -271,7 +357,7 @@ export const Map = () => {
             }
 
             update() {
-                const speed = 50;
+                const speed = 1.2;
 
                 // Reset velocity
                 this.player.setVelocity(0);
@@ -356,11 +442,11 @@ export const Map = () => {
                 height: '100%',
             },
             physics: {
-                default: "arcade",
-                arcade: {
-                    gravity: { y: 0 },
-                    debug:true
-                },
+                default: 'matter',
+                matter: {
+                    debug: !true, // Set to false in production
+                    gravity: { y: 0 }, // Zero gravity for top-down game
+                }
             },
             scene: CanvasGame,
             parent: "phaser-game",
@@ -382,7 +468,7 @@ export const Map = () => {
             {/* <VideoCall/> */}
             <div id="phaser-game" style={{ width: "100vw", height: "85vh", }}></div>
             <Chat />
-            <SFU key={Date.now()} roomId={roomIds} />
+            <SFU key={Date.now()} roomId={roomIds} isMicOn={isMicOn} isCamOn={isCamOn} />
 
         </>)
 

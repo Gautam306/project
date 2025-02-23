@@ -206,7 +206,8 @@ const Chat = () => {
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
+                placeholder="Type a message..."               
+                autoFocus
                 style={{
                   flex: 1,
                   padding: "8px",

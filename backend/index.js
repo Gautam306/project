@@ -33,8 +33,8 @@ io.on("connection", (socket) => {
                 username: username,
                 id: socket.id,
                 mapId: mapId,
-                x: 1326/2, // Default position
-                y: 545/2,
+                x: 1216/2, // Default position
+                y: 1056/2,
                 anim: "walk-up",
             };
 
@@ -69,7 +69,7 @@ io.on("connection", (socket) => {
             user.y = data.y;
             user.anim = data.anim;
 
-            // console.log(`Player moved: ${user.username} in Map ID: ${user.mapId}`);
+            console.log(`Player moved: ${user.username} in Map ID: ${user.mapId}`);
 
             // Notify other players in the same room about the movement
             socket.to(user.mapId).emit("playerMoved", user);
@@ -114,19 +114,19 @@ io.on("connection", (socket) => {
     socket.on("move", (userData) => {
         const { userID, mapID, x, y } = userData;
             console.log("move ",userID,mapID,x,y);
-        // Update user position
-        // if (!UserCorrespondingRoom[mapID]) {
-        //     UserCorrespondingRoom[mapID] = [];
-        // }
+        
+        if (!UserCorrespondingRoom[mapID]) {
+            UserCorrespondingRoom[mapID] = [];
+        }
 
-        // const userIndex = UserCorrespondingRoom[mapID].findIndex(u => u.id === userID);
-        // if (userIndex !== -1) {
-        //     UserCorrespondingRoom[mapID][userIndex] = { id: userID, x, y };
-        // } else {
-        //     UserCorrespondingRoom[mapID].push({ id: userID, x, y });
-        // }
+        const userIndex = UserCorrespondingRoom[mapID].findIndex(u => u.id === userID);
+        if (userIndex !== -1) {
+            UserCorrespondingRoom[mapID][userIndex] = { id: userID, x, y };
+        } else {
+            UserCorrespondingRoom[mapID].push({ id: userID, x, y });
+        }
 
-        // Process proximity only when user moves
+        
         updateProximity(mapID);
     });
 

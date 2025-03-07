@@ -5,12 +5,18 @@ import { useSocket } from "../ContextApi/SocketProvider";
 
 
 
-const DraggableDiv = ({ Stream, isCamOn, user }) => {
+const DraggableDiv = ({ Stream, isCamOn, user,stopMedia }) => {
 
   const screenWidth = window.innerWidth;
   const screeenHeight = window.innerHeight;
   const {producersRef,streamRef,socket } = useSocket();
   console.log("STREAM ", Stream,"   ",user,"  ",Stream?.getVideoTracks()[0]);
+
+
+  useEffect(()=>{
+    if(Stream.getVideoTracks()[0]==undefined)
+      stopMedia();
+  },[])
 
   
 

@@ -32,7 +32,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  /* padding: 2rem; */
   background-color: #1c2427;
   text-align: center;
   overflow: hidden;
@@ -335,7 +335,7 @@ body {
 /* General Container */
 .entry-container {
   display: flex;
-  height: 90vh;
+  height: 100vh;
   background: linear-gradient(135deg, #1c1c1c, #3e3e3e);
   color: #fff;
   font-family: "Arial", sans-serif;
@@ -348,7 +348,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  /* padding: 2rem; */
   background-color: #1c2427;
   text-align: center;
   color: #d6ff41;
@@ -370,7 +370,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  /* padding: 2rem; */
   background: #3e3e3e;
 }
 

@@ -16,7 +16,7 @@ export const Map = ({ isMicOn, isCamOn }) => {
     const gameRef = useRef(null);
     const gamesocket = useRef(null);
     const navigate = useNavigate();
-    
+
     useEffect(() => {
         // Emit move event before unload
         const handleBeforeUnload = () => {
@@ -30,12 +30,12 @@ export const Map = ({ isMicOn, isCamOn }) => {
             }
             localStorage.setItem("isRefreshed", "true");
         };
-    
+
         window.addEventListener("beforeunload", handleBeforeUnload);
-    
+
         if (localStorage.getItem("isRefreshed") && localStorage.getItem('userInfo')) {
             console.log("user out");
-    
+
             // Attempt to send move event if socket is still available
             if (gamesocket.current) {
                 gamesocket.current.emit('move', {
@@ -45,16 +45,16 @@ export const Map = ({ isMicOn, isCamOn }) => {
                     y: 100000,
                 });
             }
-    
+
             localStorage.clear();
             navigate("/");
         }
-    
+
         return () => {
             window.removeEventListener("beforeunload", handleBeforeUnload);
         };
     }, []);
-    
+
 
     const [roomIds, setRoomId] = useState("10");
     const [socketupdate, isSocketUpdate] = useState(null);
@@ -135,7 +135,26 @@ export const Map = ({ isMicOn, isCamOn }) => {
                 const Layer5 = map.createLayer("Layer 5", tileset);
 
                 // Convert tile layers to matter bodies
-                this.matter.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+                this.matter.world.setBounds(0, 0, map.widthInPixels+500, map.heightInPixels);
+
+                const mapWidth = map.widthInPixels; // Replace with your actual map width
+                const screenWidth = window.innerWidth;
+
+                const scaleFactor = screenWidth / mapWidth;
+                // if (mapWidth < screenWidth) {
+                //     map.getLayers().forEach(layer => {
+                //         layer.tilemapLayer.setScale(scaleFactor); // Scale each layer
+                //     });
+
+                // }
+
+                
+
+                const offsetX = (screenWidth - mapWidth) / 2;
+                // map.getLayers().forEach(layer => {
+                //     layer.tilemapLayer.x = offsetX; // Shift the tilemap layer to the center
+                // });
+
 
                 const layers1 = [groundLayer, wallsLayer, Layer4, Layer5];
                 layers1.forEach(layer => {
@@ -192,6 +211,7 @@ export const Map = ({ isMicOn, isCamOn }) => {
                 const layers = [groundLayer, wallsLayer, Layer4, Layer5];
                 layers.forEach(layer => {
                     if (layer) {
+                        
                         layer.layer.data.forEach((row, y) => {
                             row.forEach((tile, x) => {
                                 if (tile.index !== -1) {  // If tile exists
@@ -213,6 +233,7 @@ export const Map = ({ isMicOn, isCamOn }) => {
                 });
 
                 // Create player with proper collision category
+                console.log('heightInPixels ', map.heightInPixels, "    ", map.widthInPixels);
 
                 this.player = this.matter.add.sprite(map.widthInPixels / 2, map.heightInPixels / 2, "player", null, {
                     friction: 0,
@@ -226,7 +247,7 @@ export const Map = ({ isMicOn, isCamOn }) => {
                 // Setup the camera to follow the player
                 this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
                 this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-                this.cameras.main.setZoom(1.25);
+                this.cameras.main.setZoom(scaleFactor);
 
 
 
@@ -304,6 +325,15 @@ export const Map = ({ isMicOn, isCamOn }) => {
                             });
                         }
                     }
+
+                    gamesocket.current?.emit('move', {
+
+                        userID: gamesocket.current.id,
+                        mapID: userInfo.mapId,
+                        x: this.player.x,
+                        y: this.player.y,
+
+                    })
                 });
 
                 // , {
@@ -442,20 +472,14 @@ export const Map = ({ isMicOn, isCamOn }) => {
                 });
 
 
-                gamesocket.current?.emit('move', {
 
-                    userID: gamesocket.current.id,
-                    mapID: userInfo.mapId,
-                    x: this.player.x,
-                    y: this.player.y,
-
-                })
 
 
             }
 
 
             addOtherPlayer(player) {
+                console.log("addOtherPlayer ", player);
                 const otherPlayer = this.add.sprite(player.x, player.y, "player");
                 otherPlayer.anims.play(player.anim || "walk-down", true);
                 otherPlayer.setScale(0.4);

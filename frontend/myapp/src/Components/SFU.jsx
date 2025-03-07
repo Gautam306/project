@@ -336,17 +336,26 @@ const App = ({ roomId, isMicOn, isCamOn }) => {
       });
       console.log("startMedia call localVideRef set before", localVideoRef.current);
       setlocalStream(streamRef.current);
-      
+
       if (localVideoRef.current) {
         console.log("startMedia call localVideRef set", streamRef.current);
         localVideoRef.current.srcObject = streamRef.current;
       }
 
+      if (!producerTransportRef.current) {
+        console.error("Producer transport is not initialized.");
+      } else if (producerTransportRef.current.closed) {
+        console.error("Producer transport is closed.");
+        stopMedia();
+      } else {
+        console.log("Producer transport is active.");
+      
+
       // Produce video track
       const videoTrack = streamRef.current.getVideoTracks()[0];
       if (videoTrack) {
         // console.log("isCamOn ",localStorage.getItem('isCamOn'));
-        
+
 
         console.log("Producing video track:", videoTrack.label);
         const videoProducer = await producerTransportRef.current.produce({
@@ -362,14 +371,14 @@ const App = ({ roomId, isMicOn, isCamOn }) => {
           }
         });
         producersRef.current.set('video', videoProducer);
-        
-        
+
+
       }
 
       // Produce audio track
       const audioTrack = streamRef.current.getAudioTracks()[0];
       if (audioTrack) {
-        
+
         console.log("Producing audio track:", audioTrack.label);
         const audioProducer = await producerTransportRef.current.produce({
           track: audioTrack,
@@ -380,7 +389,7 @@ const App = ({ roomId, isMicOn, isCamOn }) => {
         });
         producersRef.current.set('audio', audioProducer);
       }
-
+    }
       // const isCamOn = localStorage.getItem('isCamOn') === "true";
       // const isMicOn = localStorage.getItem('isMicOn') === "true";
 
@@ -427,6 +436,44 @@ const App = ({ roomId, isMicOn, isCamOn }) => {
     } catch (err) {
       console.error("Failed to start media:", err);
       setError("Failed to access camera/microphone");
+    }
+  };
+
+  const stopMedia = async () => {
+    try {
+      console.log("stopMedia call");
+
+      // Stop video and audio tracks
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+
+      // Stop and close video producer
+      const videoProducer = producersRef.current.get('video');
+      if (videoProducer) {
+        console.log("Closing video producer");
+        await videoProducer.close();
+        producersRef.current.delete('video');
+      }
+
+      // Stop and close audio producer
+      const audioProducer = producersRef.current.get('audio');
+      if (audioProducer) {
+        console.log("Closing audio producer");
+        await audioProducer.close();
+        producersRef.current.delete('audio');
+      }
+
+      // Clear video element
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = null;
+      }
+
+      console.log("Media stopped successfully");
+
+    } catch (err) {
+      console.error("Failed to stop media:", err);
     }
   };
 
@@ -528,13 +575,13 @@ const App = ({ roomId, isMicOn, isCamOn }) => {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="relative">
               {/* <h3 className="text-lg mb-2">My Video</h3> */}
-              {localStream && <DraggableDiv key={localStream.id} Stream={localStream} isCamOn={true} user="yours" />}
+              {localStream && <DraggableDiv key={localStream.id} Stream={localStream} isCamOn={true} stopMedia={stopMedia} user="yours" />}
 
             </div>
 
             {Object.entries(remoteStreams).map(([peerId, stream]) => (
               console.log("remoteStreams ", peerId, " ", stream) ||
-              <DraggableDiv key={peerId} Stream={stream} isCamOn={true} user="other" />
+              <DraggableDiv key={peerId} Stream={stream} isCamOn={true} stopMedia={stopMedia} user="other" />
 
             ))}
           </div>

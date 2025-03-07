@@ -12,7 +12,7 @@ export const SocketProvider = ({ children }) => {
   const [remoteStream, setRemoteStream] = useState([]);
   const [myStream, setMyStream] = useState();
   const [remoteSocketId, setRemoteSocketId] = useState([]);
-  const [localStream,setlocalStream]=useState(null);
+  const [localStream, setlocalStream] = useState(null);
   // const[audioMic,setAudioMic]=useState(false);
   // const [videoCallMic,setVideoCallMic]=useState(false);
 
@@ -21,19 +21,15 @@ export const SocketProvider = ({ children }) => {
   const videoCallMic = useRef(null);
   const producersRef = useRef(new Map());
   const streamRef = useRef(null);
-
+  
   const remoteSocketIdRef = useRef(null);
   const remoteSocketStreamIdRef = useRef(null);
   const myStreamIdRef = useRef(null);
-
-  
   const [isVideoOn, setIsVideoCall] = useState(true);
-  
-
 
 
   return (
-    <SocketContext.Provider value={{producersRef,streamRef,isVideoOn, setIsVideoCall, audioMic,videoCallMic,socket, remoteStream,myStreamIdRef, setRemoteStream, myStream, setMyStream, remoteSocketId, setRemoteSocketId,localStream,setlocalStream }}>
+    <SocketContext.Provider value={{ producersRef, streamRef, isVideoOn, setIsVideoCall, audioMic, videoCallMic, socket, remoteStream, myStreamIdRef, setRemoteStream, myStream, setMyStream, remoteSocketId, setRemoteSocketId, localStream, setlocalStream }}>
       {children}
     </SocketContext.Provider>
   );

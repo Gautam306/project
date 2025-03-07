@@ -111,143 +111,198 @@ io.on("connection", (socket) => {
     });
 
 
+    socket.on("move", (userData) => {
+        const { userID, mapID, x, y } = userData;
+            console.log("move ",userID,mapID,x,y);
+        // Update user position
+        // if (!UserCorrespondingRoom[mapID]) {
+        //     UserCorrespondingRoom[mapID] = [];
+        // }
 
-    // Periodic proximity check
-    setInterval(() => {
-        Object.keys(UserCorrespondingRoom).forEach((mapId) => {
-            const usersInRoom = UserCorrespondingRoom[mapId];
-            // add 
-            usersInRoom.forEach((user) => {
-                let userRoomID = null;
+        // const userIndex = UserCorrespondingRoom[mapID].findIndex(u => u.id === userID);
+        // if (userIndex !== -1) {
+        //     UserCorrespondingRoom[mapID][userIndex] = { id: userID, x, y };
+        // } else {
+        //     UserCorrespondingRoom[mapID].push({ id: userID, x, y });
+        // }
 
-                // Find if the user is already in a video room
-                for (const roomID in videoRooms) {
-                    if (videoRooms[roomID].includes(user.id)) {
-                        userRoomID = roomID;
-                        break;
-                    }
-                }
-                if(userRoomID!=null)
-                {
-                    return;
-                }
+        // Process proximity only when user moves
+        updateProximity(mapID);
+    });
 
-                let joinedRoom = false;
-                // Check if user can join any existing room
-                for (const roomID in videoRooms) {
-                    const roomMembers = videoRooms[roomID];
-
-                    // Check if the user is already in the room
-                    if (roomMembers.includes(user.id)) continue;
-
-                    console.log("roomMembers ",roomMembers);
-
-                    // Ensure user is in proximity to **all** current members
-                    const canJoin = roomMembers.every((memberID) => {
-                        const member = usersInRoom.find((u) => u.id === memberID);
-                        console.log("member ",member);
-                        return member && calculateDistance(user.x, user.y, member.x, member.y) < proximityDistance;
-                    });
-
-                    if (canJoin) {
-                        console.log("video-start new user ", user);
-                        videoRooms[roomID].push(user.id);
-                        io.to(user.id).emit("video-call-start", roomID);
-                        joinedRoom = true;
-                        return;
-                    }
-                }
-
-                // If no suitable existing room, check if a new room should be created
-                if (!joinedRoom) {
-                    for (const otherUser of usersInRoom) {
-                        if (user.id === otherUser.id) continue; // Skip self-comparison
-                
-                        // Check if the other user is already in a room
-                        const otherUserRoom = Object.entries(videoRooms).find(([_, members]) => 
-                            members.includes(otherUser.id)
-                        );
-                
-                        if (otherUserRoom) continue; // Skip if the other user is in a room
-                
-                        const distance = calculateDistance(user.x, user.y, otherUser.x, otherUser.y);
-                        if (distance < proximityDistance) {
-                            // Create a new room if the user has no room
-                            if (!userRoomID) {
-                                console.log("video-start two users:", user, otherUser);
-                                const newRoomID = `room-${user.id}-${otherUser.id}`;
-                                videoRooms[newRoomID] = [user.id, otherUser.id];
-                
-                                io.to(user.id).emit("video-call-start", newRoomID);
-                                io.to(otherUser.id).emit("video-call-start", newRoomID);
-                                return;
-                            }
-                        }
-                    }
-                }
-                
-            });
-
-            // remove
-
-            usersInRoom.forEach((user) => {
-                let userRoomID = null;
-
-                // Find if the user is already in a video room
-                for (const roomID in videoRooms) {
-                    if (videoRooms[roomID].includes(user.id)) {
-                        userRoomID = roomID;
-                        break;
-                    }
-                }
-                if(userRoomID==null)
-                        return;
-                
-                for (const roomID in videoRooms) {
-                    const roomMembers = videoRooms[roomID];
-
-                    // Check if the user is already in the room
-                    // if (!roomMembers.includes(user.id)) continue;
-
-                    // Ensure user is in proximity to **all** current members
-                    const canRemove = roomMembers.some((memberID) => {
-                        if (memberID === user.id) return false; // Ignore self-check
-                        const member = usersInRoom.find((u) => u.id === memberID);
-                        return member && calculateDistance(user.x, user.y, member.x, member.y) > proximityDistance;
-                    });
-
-                    // console.log("canRemove ",canRemove);
-
-                    if (canRemove && userRoomID) {
-                        console.log("video-end user ", user);
-                        videoRooms[roomID] = videoRooms[roomID].filter((memberID) => memberID !== user.id);
-                        io.to(user.id).emit("video-call-end");
-
-                        if (videoRooms[roomID].length === 1) {
-                            const lastUserID = videoRooms[roomID][0];
-                            console.log("video-call-end for last user ", lastUserID);
-                            io.to(lastUserID).emit("video-call-end");
-                            delete videoRooms[roomID]; // Remove the empty room
-                        }
-
-                        return;
-                    }
-                    // console.log("videoRooms List ",videoRooms); 
-                    if (videoRooms[roomID].length === 1) {
-                        const lastUserID = videoRooms[roomID][0];
-                        console.log("video-call-end for last user ", lastUserID);
-                        io.to(lastUserID).emit("video-call-end");
-                        delete videoRooms[roomID]; // Remove the empty room
-                    }
-                    if (videoRooms[roomID]?.length === 0) {
-                        delete videoRooms[roomID];
-                    }
-                }
-
-            })
-
-        });
-    }, 1000); // Run proximity check every second
+    // setInterval(() => {
+    //     Object.keys(UserCorrespondingRoom).forEach((mapId) => {
+    //         const usersInRoom = UserCorrespondingRoom[mapId];
+    //         const userPositions = new Map(usersInRoom.map(user => [user.id, user]));
+            
+    //         const usersToRemove = new Set();
+    //         const usersInRooms = new Set(); // Track users already assigned to a room
+    //         const roomsToDelete = new Set();
+    
+    //         // Step 1: Mark users for removal if they move out of range
+    //         Object.keys(videoRooms).forEach((roomID) => {
+    //             const roomMembers = videoRooms[roomID];
+    
+    //             roomMembers.forEach((userID) => {
+    //                 const user = userPositions.get(userID);
+    //                 if (!user) return;
+    
+    //                 const isFar = roomMembers.some((memberID) => {
+    //                     if (memberID === userID) return false;
+    //                     const member = userPositions.get(memberID);
+    //                     return member && calculateDistance(user.x, user.y, member.x, member.y) > proximityDistance;
+    //                 });
+    
+    //                 if (isFar) usersToRemove.add(userID);
+    //             });
+    //         });
+    
+    //         // Step 2: Try to assign users to existing rooms
+    //         usersInRoom.forEach((user) => {
+    //             if (usersToRemove.has(user.id)) return;
+    
+    //             let assignedRoom = null;
+    
+    //             for (const roomID in videoRooms) {
+    //                 const roomMembers = videoRooms[roomID];
+    
+    //                 if (roomMembers.includes(user.id)) {
+    //                     assignedRoom = roomID;
+    //                     usersInRooms.add(user.id);
+    //                     break;
+    //                 }
+    
+    //                 const canJoin = roomMembers.every((memberID) => {
+    //                     const member = userPositions.get(memberID);
+    //                     return member && calculateDistance(user.x, user.y, member.x, member.y) <= proximityDistance;
+    //                 });
+    
+    //                 if (canJoin) {
+    //                     videoRooms[roomID].push(user.id);
+    //                     io.to(user.id).emit("video-call-start", roomID);
+    //                     usersInRooms.add(user.id);
+    //                     return;
+    //                 }
+    //             }
+    
+    //             // Step 3: If no existing room, try to create a new one
+    //             if (!assignedRoom) {
+    //                 for (const otherUser of usersInRoom) {
+    //                     if (user.id === otherUser.id || usersInRooms.has(otherUser.id)) continue;
+    
+    //                     const distance = calculateDistance(user.x, user.y, otherUser.x, otherUser.y);
+    //                     if (distance <= proximityDistance) {
+    //                         const newRoomID = `room-${user.id}-${otherUser.id}`;
+    //                         videoRooms[newRoomID] = [user.id, otherUser.id];
+    
+    //                         io.to(user.id).emit("video-call-start", newRoomID);
+    //                         io.to(otherUser.id).emit("video-call-start", newRoomID);
+    //                         usersInRooms.add(user.id);
+    //                         usersInRooms.add(otherUser.id);
+    //                         return;
+    //                     }
+    //                 }
+    //             }
+    //         });
+    
+    //         // Step 4: Remove users who moved out of proximity
+    //         usersToRemove.forEach((userID) => {
+    //             for (const roomID in videoRooms) {
+    //                 if (!videoRooms[roomID].includes(userID)) continue;
+    
+    //                 videoRooms[roomID] = videoRooms[roomID].filter(id => id !== userID);
+    //                 io.to(userID).emit("video-call-end");
+    
+    //                 if (videoRooms[roomID].length === 1) {
+    //                     const lastUserID = videoRooms[roomID][0];
+    //                     io.to(lastUserID).emit("video-call-end");
+    //                     roomsToDelete.add(roomID);
+    //                 }
+    //             }
+    //         });
+    
+    //         // Step 5: Delete empty rooms safely
+    //         roomsToDelete.forEach((roomID) => {
+    //             delete videoRooms[roomID];
+    //         });
+    
+    //     });
+    // }, 100);
+    
 
 
 });
+
+
+// Function to check proximity and update rooms
+function updateProximity(mapID) {
+    Object.entries(UserCorrespondingRoom).forEach(([mapID, usersInRoom]) => {
+        usersInRoom.forEach((user) => {
+            let userRoomID = Object.keys(videoRooms).find(roomID => videoRooms[roomID].includes(user.id));
+            
+            if (userRoomID) return; // Skip if user is already in a room
+
+            let joinedRoom = false;
+            
+            for (const [roomID, roomMembers] of Object.entries(videoRooms)) {
+                if (roomMembers.includes(user.id)) continue;
+
+                if (roomMembers.every(memberID => {
+                    const member = usersInRoom.find(u => u.id === memberID);
+                    return member && calculateDistance(user.x, user.y, member.x, member.y) <= proximityDistance;
+                })) {
+                    console.log("video-start new user", user);
+                    roomMembers.push(user.id);
+                    io.to(user.id).emit("video-call-start", roomID);
+                    joinedRoom = true;
+                    break;
+                }
+            }
+            
+            if (!joinedRoom) {
+                for (const otherUser of usersInRoom) {
+                    if (user.id === otherUser.id) continue;
+
+                    if (Object.values(videoRooms).some(members => members.includes(otherUser.id))) continue;
+
+                    if (calculateDistance(user.x, user.y, otherUser.x, otherUser.y) <= proximityDistance) {
+                        const newRoomID = `room-${user.id}-${otherUser.id}`;
+                        console.log("video-start two users:", user, otherUser);
+                        videoRooms[newRoomID] = [user.id, otherUser.id];
+                        io.to(user.id).emit("video-call-start", newRoomID);
+                        io.to(otherUser.id).emit("video-call-start", newRoomID);
+                        break;
+                    }
+                }
+            }
+        });
+
+        usersInRoom.forEach((user) => {
+            let userRoomID = Object.keys(videoRooms).find(roomID => videoRooms[roomID].includes(user.id));
+            if (!userRoomID) return;
+
+            const roomMembers = videoRooms[userRoomID];
+            
+            if (roomMembers.some(memberID => {
+                if (memberID === user.id) return false;
+                const member = usersInRoom.find(u => u.id === memberID);
+                return member && calculateDistance(user.x, user.y, member.x, member.y) > proximityDistance;
+            })) {
+                console.log("video-end user", user);
+                videoRooms[userRoomID] = roomMembers.filter(memberID => memberID !== user.id);
+                io.to(user.id).emit("video-call-end");
+            }
+            
+            if (videoRooms[userRoomID]?.length === 1) {
+                const lastUserID = videoRooms[userRoomID][0];
+                console.log("video-call-end for last user", lastUserID);
+                io.to(lastUserID).emit("video-call-end");
+                delete videoRooms[userRoomID];
+            }
+            
+            if (videoRooms[userRoomID]?.length === 0) {
+                delete videoRooms[userRoomID];
+            }
+        });
+    });
+}

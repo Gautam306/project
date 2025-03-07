@@ -5,7 +5,7 @@ import Draggable from "react-draggable";
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
+  const [newMessage, setNewMessage] = useState();
   const [isMinimized, setIsMinimized] = useState(false);
   const { socket } = useSocket();
   const messagesEndRef = useRef(null);
@@ -83,7 +83,7 @@ const Chat = () => {
           Chat Room
         </div>
       ) : (
-        <Draggable>
+        <Draggable cancel="input, textarea, button" bounds="parent">
           <div
             className="chat-box"
             style={{
@@ -162,20 +162,20 @@ const Chat = () => {
                         fontSize: "12px",
                         marginBottom: "4px",
                         fontWeight: "bold",
-                        
+
                       }}
                     >
                       {msg.type === "sent" ? "You" : msg.sender}
                     </div>
-                    <div  style={{
-                        // fontSize: "10px",
-                        marginBottom: "4px",
-                        maxWidth: "100%", 
-                        wordWrap: "break-word", 
-                        whiteSpace: "normal", 
-                        overflowWrap: "break-word", 
-                        
-                      }}>{msg.message}</div>
+                    <div style={{
+                      // fontSize: "10px",
+                      marginBottom: "4px",
+                      maxWidth: "100%",
+                      wordWrap: "break-word",
+                      whiteSpace: "normal",
+                      overflowWrap: "break-word",
+
+                    }}>{msg.message}</div>
                     {/* <div
                       style={{
                         fontSize: "10px",
@@ -205,9 +205,13 @@ const Chat = () => {
               <input
                 type="text"
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."               
-                autoFocus
+                onChange={(e) => { setNewMessage(e.target.value) }}
+                placeholder="Type a message..."
+                onKeyDown={e => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
+                onFocus={e => e.stopPropagation()}
+                onMouseOver={e => e.stopPropagation()}
+                // autoFocus
                 style={{
                   flex: 1,
                   padding: "8px",

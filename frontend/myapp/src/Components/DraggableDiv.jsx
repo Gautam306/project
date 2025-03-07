@@ -1,25 +1,31 @@
 import React, { useEffect, useState } from "react";
 import ReactPlayer from "react-player";
 import { CameraOff } from "react-feather";
+import { useSocket } from "../ContextApi/SocketProvider";
 
 
 
 const DraggableDiv = ({ Stream, isCamOn, user }) => {
+
+  const screenWidth = window.innerWidth;
+  const screeenHeight = window.innerHeight;
+  const {producersRef,streamRef,socket } = useSocket();
+  console.log("STREAM ", Stream,"   ",user,"  ",Stream?.getVideoTracks()[0]);
+
   
-  // console.log("STREAM ", Stream?.getVideoTracks()[0]);
-  
+
   const [position, setPosition] = useState({
     x: Math.random() * 100,
     y: Math.random() * 50
   });
 
-  useEffect(()=>{
+  useEffect(() => {
 
-    if(user==="Your")
-      {
-        // setPosition({x:0,y:0}) 
-      }
-  },[user])
+    if (user === "yours") {
+      console.log("yours");
+      // setPosition({x:screenWidth/2,y:screeenHeight/2}) 
+    }
+  }, [user])
 
   const [dragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -45,7 +51,7 @@ const DraggableDiv = ({ Stream, isCamOn, user }) => {
     setDragging(false);
   };
 
- 
+
 
   return (
     <div
@@ -54,14 +60,17 @@ const DraggableDiv = ({ Stream, isCamOn, user }) => {
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
         cursor: dragging ? "grabbing" : "grab",
+        position: user == "yours" ? 'fixed' : 'absolute',
+        left: user == "yours" && 0,
+        bottom: user == "yours" && 0,
       }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp} // Stop dragging if the mouse leaves the div
+      onMouseLeave={handleMouseUp}
     >
-      {/* {user} */}
-      {Stream && Stream.getVideoTracks()[0]?.enabled ? <ReactPlayer  playing={Stream.getVideoTracks()[0]?.enabled} height="100%" width='100%' url={Stream} muted={!Stream.getAudioTracks()[0]?.enabled} /> : <CameraOff />}
+      {user}
+      {Stream ? <ReactPlayer key={Date.now()} playing={Stream.getVideoTracks()[0]?.enabled} height="100%" width='100%' url={Stream} muted={!Stream.getAudioTracks()[0]?.enabled} /> : <CameraOff />}
     </div>
   );
 };

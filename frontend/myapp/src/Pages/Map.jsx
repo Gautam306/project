@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import Phaser from 'phaser';
 import jsonFile from '../assets/officev2.json';
 import setupImage from '../assets/office-top1.png';
@@ -11,9 +12,50 @@ import VideoCall from "../Components/VideoCall";
 import SFU from "../Components/SFU";
 import Chat from '../Components/Chat';
 
-export const Map = ({isMicOn, isCamOn}) => {
+export const Map = ({ isMicOn, isCamOn }) => {
     const gameRef = useRef(null);
     const gamesocket = useRef(null);
+    const navigate = useNavigate();
+    
+    useEffect(() => {
+        // Emit move event before unload
+        const handleBeforeUnload = () => {
+            if (gamesocket.current) {
+                gamesocket.current.emit('move', {
+                    userID: gamesocket.current.id,
+                    mapID: userInfo.mapId,
+                    x: 100000,
+                    y: 100000,
+                });
+            }
+            localStorage.setItem("isRefreshed", "true");
+        };
+    
+        window.addEventListener("beforeunload", handleBeforeUnload);
+    
+        if (localStorage.getItem("isRefreshed") && localStorage.getItem('userInfo')) {
+            console.log("user out");
+    
+            // Attempt to send move event if socket is still available
+            if (gamesocket.current) {
+                gamesocket.current.emit('move', {
+                    userID: gamesocket.current.id,
+                    mapID: userInfo.mapId,
+                    x: 100000,
+                    y: 100000,
+                });
+            }
+    
+            localStorage.clear();
+            navigate("/");
+        }
+    
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, []);
+    
+
     const [roomIds, setRoomId] = useState("10");
     const [socketupdate, isSocketUpdate] = useState(null);
     const { socket, setMyStream, myStream, setRemoteStream, remoteStream, handleCallDisconnect } = useSocket();
@@ -123,7 +165,7 @@ export const Map = ({isMicOn, isCamOn}) => {
                                     x: tileX * 32 + object.x + point.x,
                                     y: tileY * 32 + object.y + point.y
                                 }));
-            
+
                                 // Create polygon body
                                 this.matter.add.fromVertices(
                                     tileX * 32 + object.x,
@@ -145,7 +187,7 @@ export const Map = ({isMicOn, isCamOn}) => {
                         });
                     }
                 };
-            
+
                 // Process all layers for polygon collisions
                 const layers = [groundLayer, wallsLayer, Layer4, Layer5];
                 layers.forEach(layer => {
@@ -158,22 +200,21 @@ export const Map = ({isMicOn, isCamOn}) => {
                                         // console.log("tileDataDown tileData","  ",tileData);
                                         createPolygonCollider(tileData, x, y);
                                     }
-                                    const tileDataDown = map.tilesets[1].tileData[tile.index-1];
-                                    
-                                    if(tileDataDown)
-                                    {
+                                    const tileDataDown = map.tilesets[1].tileData[tile.index - 1];
+
+                                    if (tileDataDown) {
                                         // console.log("tileDataDown ",tileDataDown,"  ",tileData);
-                                        createPolygonCollider(tileDataDown,x,y);
+                                        createPolygonCollider(tileDataDown, x, y);
                                     }
                                 }
                             });
                         });
                     }
                 });
-            
+
                 // Create player with proper collision category
-          
-                this.player = this.matter.add.sprite(map.widthInPixels/2, map.heightInPixels/2, "player", null, {
+
+                this.player = this.matter.add.sprite(map.widthInPixels / 2, map.heightInPixels / 2, "player", null, {
                     friction: 0,
                     frictionAir: 0.001,
                     density: 0.001,
@@ -272,7 +313,7 @@ export const Map = ({isMicOn, isCamOn}) => {
 
                 gamesocket.current.on('video-call-start', (roomId) => {
                     if (!socket.current) {
-                        
+
                         socket.current = io('http://localhost:5001');
                         setRoomId(roomId);
                         // email: userInfo.username,
@@ -386,6 +427,7 @@ export const Map = ({isMicOn, isCamOn}) => {
                         y: this.player.y,
                         anim,
                     });
+
                 } else {
                     this.player.anims.stop();
                 }
@@ -398,6 +440,17 @@ export const Map = ({isMicOn, isCamOn}) => {
                         child.setPosition(this.player.x - 10, this.player.y - 15);
                     }
                 });
+
+
+                gamesocket.current?.emit('move', {
+
+                    userID: gamesocket.current.id,
+                    mapID: userInfo.mapId,
+                    x: this.player.x,
+                    y: this.player.y,
+
+                })
+
 
             }
 

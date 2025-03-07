@@ -159,7 +159,7 @@ io.on("connection", async (socket) => {
             // Emit existing producers after a short delay to ensure proper initialization
             setTimeout(() => {
                 socket.emit("existing-producers", existingProducers);
-            }, 1000);
+            }, 100);
 
 
             // Get all existing producers with their peer IDs
@@ -350,7 +350,7 @@ io.on("connection", async (socket) => {
             setTimeout(async () => {
                 await consumer.resume();
                 socket.emit("consumer-resumed", { consumerId: consumer.id });
-            }, 1000);
+            }, 100);
 
         } catch (error) {
             console.error("Error consuming:", error);

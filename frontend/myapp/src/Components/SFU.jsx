@@ -8,9 +8,9 @@ import DraggableDiv from "./DraggableDiv";
 
 // const socket = io("http://localhost:5000");
 
-const App = ({ roomId,isMicOn, isCamOn }) => {
+const App = ({ roomId, isMicOn, isCamOn }) => {
   console.log("roomId ", roomId);
-  const { socket,audioMic,videoCallMic,producersRef,streamRef,  } = useSocket();
+  const { socket, audioMic, videoCallMic, producersRef, streamRef, } = useSocket();
   // const audioMic=useRef(null), videoCallMic=useRef(null);
   // const [roomId, setRoomId] = useState("10");
   const [joined, setJoined] = useState(false);
@@ -24,7 +24,7 @@ const App = ({ roomId,isMicOn, isCamOn }) => {
   // const producersRef = useRef(new Map());
   const consumerTransportsRef = useRef(new Map());
   const consumersRef = useRef(new Map());
-  const[videoControl,setVideoControl]=useState(true);
+  const [videoControl, setVideoControl] = useState(true);
   // const streamRef = useRef(null);
 
   // const [audioMic, setAudioMic] = useState(false);
@@ -54,7 +54,7 @@ const App = ({ roomId,isMicOn, isCamOn }) => {
     socket?.current?.off("consumer-created");
     socket?.current?.off("connect-transport");
     socket?.current?.off('existing-producers');
-    
+
 
 
     socket.current?.on("video-pause", (roomID) => {
@@ -244,20 +244,20 @@ const App = ({ roomId,isMicOn, isCamOn }) => {
     };
   }, [roomId]);
 
- 
 
- 
-   useEffect(() => {
-      socket.current?.on("video:pause", ({ roomID }) => {
-       console.log("video:paused ",roomID);
-       setVideoControl(prev => !prev);
-      });
-  
-      return () => {
-        socket.current?.off("video:pause");
 
-      };
-    }, [socket.current]);
+
+  useEffect(() => {
+    socket.current?.on("video:pause", ({ roomID }) => {
+      console.log("video:paused ", roomID);
+      setVideoControl(prev => !prev);
+    });
+
+    return () => {
+      socket.current?.off("video:pause");
+
+    };
+  }, [socket.current]);
 
   const createConsumerTransport = async (producerId, producerPeerId) => {
     try {
@@ -321,6 +321,11 @@ const App = ({ roomId,isMicOn, isCamOn }) => {
   const startMedia = async () => {
     try {
       console.log("startMedia call");
+      // Check if transport is closed before proceeding
+      if (!producerTransportRef.current || producerTransportRef.current.closed) {
+        console.error("Producer transport is closed or not initialized");
+        return;
+      }
       streamRef.current = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
@@ -331,7 +336,7 @@ const App = ({ roomId,isMicOn, isCamOn }) => {
       });
       console.log("startMedia call localVideRef set before", localVideoRef.current);
       setlocalStream(streamRef.current);
-
+      
       if (localVideoRef.current) {
         console.log("startMedia call localVideRef set", streamRef.current);
         localVideoRef.current.srcObject = streamRef.current;
@@ -340,6 +345,9 @@ const App = ({ roomId,isMicOn, isCamOn }) => {
       // Produce video track
       const videoTrack = streamRef.current.getVideoTracks()[0];
       if (videoTrack) {
+        // console.log("isCamOn ",localStorage.getItem('isCamOn'));
+        
+
         console.log("Producing video track:", videoTrack.label);
         const videoProducer = await producerTransportRef.current.produce({
           track: videoTrack,
@@ -354,11 +362,14 @@ const App = ({ roomId,isMicOn, isCamOn }) => {
           }
         });
         producersRef.current.set('video', videoProducer);
+        
+        
       }
 
       // Produce audio track
       const audioTrack = streamRef.current.getAudioTracks()[0];
       if (audioTrack) {
+        
         console.log("Producing audio track:", audioTrack.label);
         const audioProducer = await producerTransportRef.current.produce({
           track: audioTrack,
@@ -369,6 +380,50 @@ const App = ({ roomId,isMicOn, isCamOn }) => {
         });
         producersRef.current.set('audio', audioProducer);
       }
+
+      // const isCamOn = localStorage.getItem('isCamOn') === "true";
+      // const isMicOn = localStorage.getItem('isMicOn') === "true";
+
+
+      // if (streamRef.current && !isCamOn) {
+      //   const videoTrack = streamRef.current.getVideoTracks()[0];
+      //   if (videoTrack) {
+      //     videoTrack.enabled = isCamOn;
+      //     // setIsVideoEnabled(videoTrack.enabled);
+
+      //     // If we have a video producer, pause/resume it
+      //     const videoProducer = producersRef.current.get('video');
+      //     if (videoProducer) {
+      //       if (videoTrack.enabled) {
+      //         await videoProducer.resume();
+      //       } else {
+      //         await videoProducer.pause();
+      //       }
+      //       // setVideoControl(!videoControl);
+      //       // socket.current?.emit("video-pause", {roomID:localStorage.getItem('roomID')});
+      //     }
+      //   }
+      // }
+
+      // if (streamRef.current) {
+      //   const audioTrack = streamRef.current.getAudioTracks()[0];
+      //   if (audioTrack) {
+      //     audioTrack.enabled = isMicOn;
+      //     // setIsAudioEnabled(audioTrack.enabled);
+
+      //     // If we have an audio producer, pause/resume it
+      //     const audioProducer = producersRef.current.get('audio');
+      //     if (audioProducer) {
+      //       if (audioTrack.enabled) {
+      //         await audioProducer.resume();
+      //       } else {
+      //         await audioProducer.pause();
+      //       }
+      //     }
+      //   }
+      // }
+
+
     } catch (err) {
       console.error("Failed to start media:", err);
       setError("Failed to access camera/microphone");
@@ -434,13 +489,13 @@ const App = ({ roomId,isMicOn, isCamOn }) => {
 
     toggleAudio();
 
-  }, [audioMic.current,isCamOn]);
+  }, [audioMic.current, isCamOn]);
 
   useEffect(() => {
-    console.log("videoCallMic ",videoCallMic);
-    toggleVideo();
+    console.log("videoCallMic ", videoCallMic);
+    // toggleVideo();
 
-  }, [videoCallMic.current,isMicOn])
+  }, [videoCallMic.current, isMicOn])
 
   return (
     <div className="p-4">
@@ -473,13 +528,13 @@ const App = ({ roomId,isMicOn, isCamOn }) => {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="relative">
               {/* <h3 className="text-lg mb-2">My Video</h3> */}
-              {localStream && <DraggableDiv key={videoControl} Stream={localStream} isCamOn={true} user="yours" />}
+              {localStream && <DraggableDiv key={localStream.id} Stream={localStream} isCamOn={true} user="yours" />}
 
             </div>
 
             {Object.entries(remoteStreams).map(([peerId, stream]) => (
               console.log("remoteStreams ", peerId, " ", stream) ||
-              <DraggableDiv key={videoControl} Stream={stream} isCamOn={true} user="other" />
+              <DraggableDiv key={peerId} Stream={stream} isCamOn={true} user="other" />
 
             ))}
           </div>

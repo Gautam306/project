@@ -103,8 +103,13 @@ io.on("connection", (socket) => {
                 console.log("disconnect user ", UserCorrespondingRoom[mapId]);
                 // Notify the room of the updated player list
                 io.to(mapId).emit("currentPlayers", UserCorrespondingRoom[mapId]);
+                let userRoomID = Object.keys(videoRooms)?.find(roomID => videoRooms[roomID].includes(user.id));
+                const roomMembers = videoRooms[userRoomID];
+                videoRooms[userRoomID] = roomMembers?.filter(memberID => memberID !== user.id);
             }
 
+            console.log("disconnect mapId",mapId);
+            updateProximity(mapId);
             // Notify others in the room that the user left
             io.to(mapId).emit("user-left", socket.id);
         }
@@ -113,18 +118,18 @@ io.on("connection", (socket) => {
 
     socket.on("move", (userData) => {
         const { userID, mapID, x, y } = userData;
-            console.log("move ",userID,mapID,x,y);
+            // console.log("move ",userID,mapID,x,y);
         
-        if (!UserCorrespondingRoom[mapID]) {
-            UserCorrespondingRoom[mapID] = [];
-        }
+        // if (!UserCorrespondingRoom[mapID]) {
+        //     UserCorrespondingRoom[mapID] = [];
+        // }
 
-        const userIndex = UserCorrespondingRoom[mapID].findIndex(u => u.id === userID);
-        if (userIndex !== -1) {
-            UserCorrespondingRoom[mapID][userIndex] = { id: userID, x, y };
-        } else {
-            UserCorrespondingRoom[mapID].push({ id: userID, x, y });
-        }
+        // const userIndex = UserCorrespondingRoom[mapID].findIndex(u => u.id === userID);
+        // if (userIndex !== -1) {
+        //     UserCorrespondingRoom[mapID][userIndex] = { id: userID, x, y };
+        // } else {
+        //     UserCorrespondingRoom[mapID].push({ id: userID, x, y });
+        // }
 
         
         updateProximity(mapID);
@@ -278,11 +283,13 @@ function updateProximity(mapID) {
         });
 
         usersInRoom.forEach((user) => {
+           
             let userRoomID = Object.keys(videoRooms).find(roomID => videoRooms[roomID].includes(user.id));
+            console.log("del user ",user,"  ",userRoomID);
             if (!userRoomID) return;
 
             const roomMembers = videoRooms[userRoomID];
-            
+            console.log("roomMembers ",roomMembers);
             if (roomMembers.some(memberID => {
                 if (memberID === user.id) return false;
                 const member = usersInRoom.find(u => u.id === memberID);

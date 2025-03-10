@@ -20,14 +20,14 @@ export const Map = ({ isMicOn, isCamOn }) => {
     useEffect(() => {
         // Emit move event before unload
         const handleBeforeUnload = () => {
-            if (gamesocket.current) {
-                gamesocket.current.emit('move', {
-                    userID: gamesocket.current.id,
-                    mapID: userInfo.mapId,
-                    x: 100000,
-                    y: 100000,
-                });
-            }
+            // if (gamesocket.current) {
+            //     gamesocket.current.emit('move', {
+            //         userID: gamesocket.current.id,
+            //         mapID: userInfo.mapId,
+            //         x: 100000,
+            //         y: 100000,
+            //     });
+            // }
             localStorage.setItem("isRefreshed", "true");
         };
 
@@ -37,14 +37,14 @@ export const Map = ({ isMicOn, isCamOn }) => {
             console.log("user out");
 
             // Attempt to send move event if socket is still available
-            if (gamesocket.current) {
-                gamesocket.current.emit('move', {
-                    userID: gamesocket.current.id,
-                    mapID: userInfo.mapId,
-                    x: 100000,
-                    y: 100000,
-                });
-            }
+            // if (gamesocket.current) {
+            //     gamesocket.current.emit('move', {
+            //         userID: gamesocket.current.id,
+            //         mapID: userInfo.mapId,
+            //         x: 100000,
+            //         y: 100000,
+            //     });
+            // }
 
             localStorage.clear();
             navigate("/");

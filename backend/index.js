@@ -284,7 +284,7 @@ function updateProximity(mapID) {
 
         usersInRoom.forEach((user) => {
            
-            let userRoomID = Object.keys(videoRooms).find(roomID => videoRooms[roomID].includes(user.id));
+            let userRoomID = Object.keys(videoRooms).find(roomID => videoRooms[roomID]?.includes(user?.id));
             console.log("del user ",user,"  ",userRoomID);
             if (!userRoomID) return;
 

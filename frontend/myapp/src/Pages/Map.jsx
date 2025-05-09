@@ -76,7 +76,7 @@ export const Map = ({ isMicOn, isCamOn }) => {
 
 
         if (userInfo) {
-            gamesocket.current = io('http://localhost:8002', {
+            gamesocket.current = io('https://project-2-6lam.onrender.com', {
                 path: "/socket.io",
                 transports: ["websocket"],
             });

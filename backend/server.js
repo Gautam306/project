@@ -64,7 +64,7 @@ const getOrCreateRoom = async (roomId) => {
 
 const createWebRtcTransport = async (router) => {
     return await router.createWebRtcTransport({
-        listenIps: [{ ip: "0.0.0.0", announcedIp: "https://project-4-fpkv.onrender.com" }],
+        listenIps: [{ ip: "0.0.0.0", announcedIp: "project-4-fpkv.onrender.com" }],
         enableUdp: true,
         enableTcp: true,
         preferUdp: true,

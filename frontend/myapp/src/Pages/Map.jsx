@@ -76,7 +76,7 @@ export const Map = ({ isMicOn, isCamOn }) => {
 
 
         if (userInfo) {
-            gamesocket.current = io('http://13.235.49.219:8002', {
+            gamesocket.current = io('https://13.233.103.74:8002', {
                 path: "/socket.io",
                 transports: ["websocket"],
             });

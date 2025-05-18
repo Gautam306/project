@@ -344,7 +344,7 @@ export const Map = ({ isMicOn, isCamOn }) => {
                 gamesocket.current.on('video-call-start', (roomId) => {
                     if (!socket.current) {
 
-                        socket.current = io('https://project-4-fpkv.onrender.com');
+                        socket.current = io('https://13.233.103.74:5001');
                         setRoomId(roomId);
                         // email: userInfo.username,
                         socket.current.emit("join-room", { email: userInfo.username, roomId });

@@ -76,7 +76,7 @@ export const Map = ({ isMicOn, isCamOn }) => {
 
 
         if (userInfo) {
-            gamesocket.current = io('https://3.108.53.201:8002', {
+            gamesocket.current = io('https://3.110.46.188:8002', {
                 path: "/socket.io",
                 transports: ["websocket"],
             });
@@ -344,7 +344,7 @@ export const Map = ({ isMicOn, isCamOn }) => {
                 gamesocket.current.on('video-call-start', (roomId) => {
                     if (!socket.current) {
 
-                        socket.current = io('https://13.233.103.74:5001');
+                        socket.current = io('https://13.203.208.167:5001');
                         setRoomId(roomId);
                         // email: userInfo.username,
                         socket.current.emit("join-room", { email: userInfo.username, roomId });
